@@ -44,11 +44,22 @@ extern String RID;
 extern String Rname;
 extern String Rcontent;
 
+// OLED
+// 13 SCK
+// 12 SDA
+
+
+// RS485 to TTL
+// 35 RX
+// 34 TX
+
+// DHT22
+// 32 DATA
+
 int SW1 = 21;
 int SW2 = 22;
 int SW3 = 23;
 int SW4 = 24;
-int SW5 = 25;
 
 void setup() {
   Serial.begin(115200);
