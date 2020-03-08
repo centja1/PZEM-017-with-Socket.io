@@ -54,8 +54,8 @@
 #include "DHTesp.h"
 
 // config parameters
-#define device_id "e49n2dix"
-#define deviceName  "ESP32"
+#define deviceId "e49n2dix"
+#define deviceName "ESP32"
 #define WIFI_SSID "MY-WIFI"
 #define WIFI_PASSWORD "123456789"
 #define SOCKETIO_HOST "192.168.1.100"
@@ -101,20 +101,17 @@ extern String Rcontent;
 // TX 17
 
 // DHT11
-// DATA 15
+int DHTpin = 15;
 
-// DHT22
-// 32 DATA
-
+// Relay Switch
 int SW1 = 27;
 int SW2 = 26;
 int SW3 = 25;
 int SW4 = 33;
+int SW5 = 32;
 
 //Indicates that the master needs to read 8 registers with slave address 0x01 and the start address of the register is 0x0000.
 static uint8_t pzemSlaveAddr = 0x01; // PZEM default address
-#define DHTpin 15    //D15 of ESP32 DevKit
-
 //Make sure RX (16) & TX (17) is connected jumper
 PZEM017 pzem(&Serial2, pzemSlaveAddr, 9600);
 DHTesp dht;
@@ -142,14 +139,10 @@ void setup() {
 
   setupTimeZone();
   setUpFireBase();
-
-
-  //  pinMode(SW1, OUTPUT);
-  //  pinMode(SW2, OUTPUT);
-  //  pinMode(SW3, OUTPUT);
-  //  pinMode(SW4, OUTPUT);
+  handleRelaySwitch();
 
 }
+
 
 bool inverterStarted = false;
 String batteryStatusMessage;
@@ -182,7 +175,7 @@ void loop() {
   oled.setTextXY(2, 1);
   oled.putString("- S1:" + String((digitalRead(SW1) == LOW) ? "ON" : "OFF") + " S2:" + String((digitalRead(SW2) == LOW) ? "ON" : "OFF") + " S3:" + String((digitalRead(SW3) == LOW) ? "ON" : "OFF") + " -");
 
-  if (voltage > 3) {
+  if (voltage > 3 && voltage < 300) {
 
     //Build Messages For Line Notify
     batteryStatusMessage = "\r\n===============\r\n - Battery Status - \r\n";
@@ -209,7 +202,7 @@ void loop() {
     clearDisplay();
     printMessage(4, 1, "ERROR !!", false);
     printMessage(5, 1, "Failed to read modbus", true);
-    createResponse(0, 0, 0, 0, 0, 0, 0, 0, false);
+    createResponse(0, 0, 0, 0, 0, 0, humidity, temperature, false);
   }
 
   if (!socket.connected()) {
@@ -261,8 +254,8 @@ String createResponse(float voltage, float current, float power, float energy, u
 
   StaticJsonBuffer<512> jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
+  root["deviceId"] = deviceId;
   root["deviceName"] = deviceName;
-  root["deviceId"] = device_id;
   root["time"] = NowString();
 
   JsonObject& data = root.createNestedObject("sensor");
@@ -498,8 +491,8 @@ void checkCurrentStatus(bool sendLineNotify) {
 
   StaticJsonBuffer<512> jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
+  root["deviceId"] = deviceId;
   root["deviceName"] = deviceName;
-  root["deviceId"] = device_id;
   root["lastUpdated"] = NowString();
 
   JsonObject& data = root.createNestedObject("deviceState");
@@ -627,6 +620,14 @@ void setUpFireBase() {
   Firebase.setMaxRetry(firebaseData, 3);
   Firebase.setMaxErrorQueue(firebaseData, 30);
   Firebase.enableClassicRequest(firebaseData, true);
+}
+
+void handleRelaySwitch() {
+  pinMode(SW1, OUTPUT); digitalWrite(SW1, HIGH);
+  pinMode(SW2, OUTPUT); digitalWrite(SW2, HIGH);
+  pinMode(SW3, OUTPUT); digitalWrite(SW3, HIGH);
+  pinMode(SW4, OUTPUT); digitalWrite(SW4, HIGH);
+  pinMode(SW5, OUTPUT); digitalWrite(SW5, HIGH);
 }
 
 String NowString() {
