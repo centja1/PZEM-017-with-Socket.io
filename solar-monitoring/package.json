@@ -41,7 +41,6 @@
     "styled-components": "^4.4.1",
     "typescript": "^3.7.2"
   },
-  "homepage": "https://192.168.1.100/solar-project/",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
