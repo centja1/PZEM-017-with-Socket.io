@@ -1,21 +1,65 @@
+/*
+
+  # Author : Watchara Pongsri
+  # [github/X-c0d3] https://github.com/X-c0d3/
+  # Web Site: https://wwww.rockdevper.com
+
+
+  Note: For Relay switch i am using active "Low"
+
+  RegAddr Description                 Resolution
+  0x0000  Voltage value               1LSB correspond to 0.01V
+  0x0001  Current value low 16 bits   1LSB correspond to 0.01A
+  0x0002  Power value low 16 bits     1LSB correspond to 0.1W
+  0x0003  Power value high 16 bits    1LSB correspond to 0.1W
+  0x0004  Energy value low 16 bits    1LSB correspond to 1Wh
+  0x0005  Energy value high 16 bits   1LSB correspond to 1Wh
+  0x0006  High voltage alarm          0xFFF is alarm, 0x0000 is not alarm
+  0x0007  Low voltage alarm           0xFFF is alarm, 0x0000 is not alarm
+
+  Read and modify the slave parameters
+  - At present,it only supports reading and modifying slave address and power alarm threshold
+  The register is arranged as the following table
+
+  0x0000  High voltage alarm threshold (5~350V) ,default is 300V        1LSB correspond to 0.01V
+  0x0001  Low voltage alarm threshold（1~350V）,default is 7V            1LSB correspond to 0.01V
+  0x0002  Modbus-RTU address                                            The range is 0x0001~0x00F7
+  0x0003  The current range(only for PZEM-017)                          0x0000：100A
+                                                                        0x0001：50A
+                                                                        0x0002: 200A
+                                                                        0x0003：300A
+
+  Ref: http://myosuploads3.banggood.com/products/20190723/20190723213410PZEM-003017UserManual.pdf
+  Ref: http://solar4living.com/pzem-arduino-modbus.htm
+  Ref: https://github.com/armtronix/Wifi-Single-Dimmer-Board/blob/ba577f0539a1fc73145e24bb50342eb1dca86594/Wifi-Single-Dimmer-Board/Arduino_Code/Wifi_single_dimmer_tasmota/sonoff_betaV0.3/xnrg_06_pzem_dc.ino
+  Ref: https://github.com/EvertDekker/Pzem016Test/blob/e95c1e6bb2d384a93910be2c8b867e40669a24b4/Pzem016Test.ino
+  Ref: https://github.com/Links2004/arduinoWebSockets/blob/master/examples/esp8266/WebSocketClientSocketIO/WebSocketClientSocketIO.ino
+  Ref: https://github.com/washo4evr/Socket.io-v1.x-Library/blob/master/SocketIOClient.h
+  Ref: https://github.com/lorenz4672/PZEM017/blob/master/src/main.cpp
+
+*/
+
 #include <Arduino.h>
 #include <time.h>
 #include<WiFi.h>
 #include <WiFiClientSecure.h>
 #include "FirebaseESP32.h"
+#include <HardwareSerial.h>
+#include "PZEM017.h"
 #include <SocketIOClient.h>
 #include <ArduinoJson.h>
 #include <string.h>
 #include <cstdlib>
-#define USE_SERIAL Serial
-
+#include <ACROBOTIC_SSD1306.h>
+#include "DHTesp.h"
 
 // config parameters
-#define device_id "a21r7pxz"
-#define ssid "MY-WIFI"
-#define password "1234567890"
-#define ServerHost "192.168.1.100"
-#define ServerPort 4000
+#define device_id "e49n2dix"
+#define deviceName  "ESP32"
+#define WIFI_SSID "MY-WIFI"
+#define WIFI_PASSWORD "123456789"
+#define SOCKETIO_HOST "192.168.1.100"
+#define SOCKETIO_PORT 4000
 #define SocketIoChannel "ESP"
 
 // Line config
@@ -23,7 +67,7 @@
 
 // Firebase config
 #define FIREBASE_HOST "xxxxxxxxxxxxx.firebaseio.com"
-#define FIREBASE_KEY "____FIREBASE_KEY____"
+#define FIREBASE_AUTH "____FIREBASE_KEY____"
 
 // Config time
 int timezone = 7;
@@ -32,12 +76,16 @@ char ntp_server2[20] = "fw.eng.ku.ac.th";
 char ntp_server3[20] = "time.uni.net.th";
 int dst = 0;
 
+float inverterVoltageStart = 13.10;
+float inverterVoltageShutdown = 12.00;
+float hightVoltage = 13.80;
+float lowVoltage = 10.50;
 
-IPAddress local_ip(192, 168, 137, 56);
-IPAddress gateway(192, 168, 137, 1);
-IPAddress subnet(255, 255, 255, 0);
+bool isDebugMode = true;
+bool enableLineNotify = false;
 
 WiFiServer server(80);
+
 SocketIOClient socket;
 FirebaseData firebaseData;
 extern String RID;
@@ -45,102 +93,241 @@ extern String Rname;
 extern String Rcontent;
 
 // OLED
-// 13 SCK
-// 12 SDA
+// 21 SDA
+// 22 SCK/SCL
 
+// PZEM - 017
+// RX 16
+// TX 17
 
-// RS485 to TTL
-// 35 RX
-// 34 TX
+// DHT11
+// DATA 15
 
 // DHT22
 // 32 DATA
 
-int SW1 = 21;
-int SW2 = 22;
-int SW3 = 23;
-int SW4 = 24;
+int SW1 = 27;
+int SW2 = 26;
+int SW3 = 25;
+int SW4 = 33;
+
+//Indicates that the master needs to read 8 registers with slave address 0x01 and the start address of the register is 0x0000.
+static uint8_t pzemSlaveAddr = 0x01; // PZEM default address
+#define DHTpin 15    //D15 of ESP32 DevKit
+
+//Make sure RX (16) & TX (17) is connected jumper
+PZEM017 pzem(&Serial2, pzemSlaveAddr, 9600);
+DHTesp dht;
 
 void setup() {
-  Serial.begin(115200);
+  // OLED Display
+  InitialOLED();
 
+  Serial.begin(115200);
   setup_Wifi();
 
-  //  if (!socket.connect(ServerHost, ServerPort)) {
-  //    Serial.println("connection failed");
-  //  }
-  //  if (socket.connected()) {
-  //    socket.send("connection", "message", "Connected !!!!");
-  //  }
+  //pzem.setAddress(0x02);
+  pzem.setCurrentShunt(1);
+  //pzem.setLOWVoltageAlarm(5);
+  //pzem.setHIVoltageAlarm(48);
 
-  setupTimeZone();
+  dht.setup(DHTpin, DHTesp::DHT11); //for DHT11 Connect DHT sensor to GPIO 15
 
-  Firebase.begin(FIREBASE_HOST, FIREBASE_KEY);
-  Firebase.reconnectWiFi(true);
-
-  Firebase.setMaxRetry(firebaseData, 3);
-  Firebase.setMaxErrorQueue(firebaseData, 30);
-  Firebase.enableClassicRequest(firebaseData, true);
-}
-
-String output;
-void loop() {
-
-  //  if (!socket.connected()) {
-  //    socket.connect(ServerHost, ServerPort);
-  //    USE_SERIAL.println("Socket.io reconnecting...");
-  //    delay(2000);
-  //  }
-
-  float voltage_usage  = random(2, 5);
-  float current_usage = random(2, 5);
-  float active_power = random(3, 6);
-  float active_energy = random(2, 5);
-  uint16_t over_power_alarm = 0;
-  uint16_t lower_power_alarm = 1;
-
-  String output;
-  StaticJsonBuffer<512> jsonBuffer;
-  JsonObject& root = jsonBuffer.createObject();
-  root["deviceName"] = "ESP8266";
-  root["deviceId"] = device_id;
-  root["time"] = NowString();
-
-  JsonArray& sensor = root.createNestedArray("sensor");
-  JsonObject& data = jsonBuffer.createObject();
-  data["voltage_usage"] = voltage_usage;
-  data["current_usage"] = current_usage;
-  data["active_power"] = active_power;
-  data["active_energy"] = active_energy;
-  data["over_power_alarm"] = over_power_alarm;
-  data["lower_power_alarm"] = lower_power_alarm;
-  sensor.add(data);
-  root.prettyPrintTo(output);
-
-  FirebaseJson ob;
-  ob.setJsonData(output);
-
-  if (Firebase.pushJSON(firebaseData, "/data",  ob)) {
-    USE_SERIAL.println("Firebase push success");
-  } else {
-    USE_SERIAL.println(firebaseData.errorReason());
+  if (!socket.connect(SOCKETIO_HOST, SOCKETIO_PORT)) {
+    Serial.println("connection failed");
+  }
+  if (socket.connected()) {
+    socket.send("connection", "message", "Connected !!!!");
   }
 
-  USE_SERIAL.println(output);
+  setupTimeZone();
+  setUpFireBase();
 
 
-  //Shutdown Inverter on 15:00
-  time_t now = time(nullptr);
-  struct tm* p_tm = localtime(&now);
-  if (p_tm->tm_hour == 7 && p_tm->tm_min == 0 && p_tm->tm_sec == 0) {
+  //  pinMode(SW1, OUTPUT);
+  //  pinMode(SW2, OUTPUT);
+  //  pinMode(SW3, OUTPUT);
+  //  pinMode(SW4, OUTPUT);
 
+}
+
+bool inverterStarted = false;
+String batteryStatusMessage;
+
+void loop() {
+
+  if (!socket.connected()) {
+    socket.connect(SOCKETIO_HOST, SOCKETIO_PORT);
+    Serial.println("Socket.io reconnecting...");
+    delay(2000);
+  }
+
+  if (isDebugMode)
+    pzem.getSlaveParameters();
+
+  // pzem.getPowerAlarm();
+
+  // PZEM-017
+  float voltage = !isnan(pzem.voltage()) ? pzem.voltage() : 0;
+  float current = !isnan(pzem.current()) ? pzem.current() : 0;
+  float power = !isnan(pzem.power()) ? pzem.power() : 0;
+  float energy = !isnan(pzem.energy()) ? pzem.energy() : 0;
+  uint16_t over_power_alarm = pzem.VoltHighAlarm();
+  uint16_t lower_power_alarm = pzem.VoltLowAlarm();
+  uint16_t powerAlarm = pzem.getPowerAlarm();
+  // DHT11
+  float humidity = !isnan(dht.getHumidity()) ? dht.getHumidity() : 0;
+  float temperature = !isnan(dht.getTemperature()) ? dht.getTemperature() : 0;
+
+  oled.setTextXY(2, 1);
+  oled.putString("- S1:" + String((digitalRead(SW1) == LOW) ? "ON" : "OFF") + " S2:" + String((digitalRead(SW2) == LOW) ? "ON" : "OFF") + " S3:" + String((digitalRead(SW3) == LOW) ? "ON" : "OFF") + " -");
+
+  if (voltage > 3) {
+
+    //Build Messages For Line Notify
+    batteryStatusMessage = "\r\n===============\r\n - Battery Status - \r\n";
+    batteryStatusMessage += "VOLTAGE: " + String(voltage) + "V\r\n";
+    batteryStatusMessage += "CURRENT: " + String(current) + "A\r\n";
+    batteryStatusMessage += "POWER: " + String(power) + "W\r\n";
+    batteryStatusMessage += "ENERGY: " + String(energy) + "WH";
+
+    bool activeInverter = (voltage >= inverterVoltageStart) ? true : (voltage <= inverterVoltageShutdown) ? false : inverterStarted;
+    if (inverterStarted != activeInverter) {
+      actionCommand("SW1", activeInverter ? "state:on" : "state:off", batteryStatusMessage, true);
+      inverterStarted = activeInverter;
+      Serial.println("inverterStarted: " + String(inverterStarted) + " activeInverter:" + String(activeInverter));
+    }
+
+    if (voltage < lowVoltage || voltage > hightVoltage) {
+      inverterStarted = false;
+      actionCommand("SW1", "state:off", batteryStatusMessage, true);
+    }
+
+    createResponse(voltage, current, power, energy, over_power_alarm, lower_power_alarm, humidity, temperature, true);
+
+  } else {
+    clearDisplay();
+    printMessage(4, 1, "ERROR !!", false);
+    printMessage(5, 1, "Failed to read modbus", true);
+    createResponse(0, 0, 0, 0, 0, 0, 0, 0, false);
+  }
+
+  if (!socket.connected()) {
+    socket.connect(SOCKETIO_HOST, SOCKETIO_PORT);
+    clearDisplay();
+    printMessage(4, 1, "Socket.io reconnecting...", false);
+    delay(2000);
   }
 
   if (socket.monitor() && RID == SocketIoChannel && socket.connected()) {
     actionCommand(Rname, Rcontent, "", false);
   }
 
+  //Shutdown Inverter on 15:00
+  time_t now = time(nullptr);
+  struct tm* p_tm = localtime(&now);
+  if (p_tm->tm_hour == 15 && p_tm->tm_min == 0 && p_tm->tm_sec == 0) {
+    actionCommand("SW1", "state:off", "Invert หยุดทำงาน ที่เวลา 15:00", true);
+  }
+
+  if (p_tm->tm_hour == 23 && p_tm->tm_min == 59)   {
+    if (Firebase.deleteNode(firebaseData, "/data")) {
+      Serial.print("delete /data failed:");
+      Serial.println("Firebase Error: " + firebaseData.errorReason());
+    }
+  }
+
   delay(2000);
+}
+
+
+String createResponse(float voltage, float current, float power, float energy, uint16_t over_power_alarm, uint16_t lower_power_alarm, float humidity, float temperature, bool isOledPrint) {
+  //For ArduinoJson 6.X
+  //  StaticJsonDocument<1024> doc;
+  //  doc["data"] = "ESP8266";
+  //  doc["last_Update"] = NowString();
+  //  JsonObject object = doc.createNestedObject("sensor");
+
+  //  object["voltage_usage"] = voltage;
+  //  object["current_usage"] = current;
+  //  object["active_power"] = power;
+  //  object["active_energy"] = energy;
+  //  object["over_power_alarm"] = over_power_alarm;
+  //  object["lower_power_alarm"] = lower_power_alarm;
+
+  //For ArduinoJson 6.X
+  //serializeJson(doc, output);
+
+
+  StaticJsonBuffer<512> jsonBuffer;
+  JsonObject& root = jsonBuffer.createObject();
+  root["deviceName"] = deviceName;
+  root["deviceId"] = device_id;
+  root["time"] = NowString();
+
+  JsonObject& data = root.createNestedObject("sensor");
+  // PZEM-017
+  data["voltage_usage"] =   voltage;
+  data["current_usage"] =  current;
+  data["active_power"] =  power;
+  data["active_energy"] =   energy;
+  data["over_power_alarm"] = over_power_alarm;
+  data["lower_power_alarm"] = lower_power_alarm;
+  // DHT11
+  data["humidity"] = humidity;
+  data["temperature"] = temperature;
+  data["heatIndex"] = dht.computeHeatIndex(temperature, humidity, false);
+
+  String output;
+  root.prettyPrintTo(output);
+
+  FirebaseJson jsonRes;
+  jsonRes.setJsonData(output);
+
+  if (voltage > 0) {
+    if (Firebase.pushJSON(firebaseData, "/data", jsonRes)) {
+      Serial.println("Firebase push success");
+    } else {
+      Serial.println("Firebase Error: " + firebaseData.errorReason());
+    }
+  }
+
+  if (isOledPrint) {
+    static char outstr[15];
+    oled.setTextXY(4, 1);
+    oled.putString("Voltage :" + String(dtostrf(voltage, 7, 2, outstr)) + "  V");
+
+    oled.setTextXY(5, 1);
+    oled.putString("Current : " + String(dtostrf(current, 7, 3, outstr)) + " A");
+
+    oled.setTextXY(6, 1);
+    oled.putString("Power   : " + String(dtostrf(power, 7, 3, outstr)) + " W");
+
+    oled.setTextXY(7, 1);
+    oled.putString("Energy  : " + String(dtostrf(energy, 7, 3, outstr)) + " Wh");
+  }
+
+  //Publish to socket.io server
+  socket.sendJSON(SocketIoChannel, output);
+
+  if (isDebugMode)
+    Serial.print(output);
+}
+
+void clearDisplay() {
+  for (int i = 4; i < 8; i++) {
+    oled.setTextXY(i, 1);
+    oled.putString("                              ");
+  }
+}
+
+void printMessage(int X, int Y, String message, bool isPrintLn) {
+  oled.setTextXY(X, Y);
+  oled.putString(message);
+  if (isPrintLn)
+    Serial.println(message);
+  else
+    Serial.print(message);
 }
 
 String header;
@@ -236,7 +423,6 @@ void httpServer() {
     Serial.println("Client disconnected.");
     Serial.println("");
   }
-
 }
 
 void actionCommand(String action, String payload, String messageInfo, bool isAuto) {
@@ -264,24 +450,39 @@ void actionCommand(String action, String payload, String messageInfo, bool isAut
     digitalWrite(SW4, (payload == "state:on") ? LOW : HIGH);
   }
 
+  if (action == "checking") {
+    checkCurrentStatus(false);
+  }
+
+  if (action == "setInverterVoltageStart" && payload != "") {
+    inverterVoltageStart = payload.toFloat();
+  }
+
+  if (action == "setInverterVoltageShutdown" && payload != "") {
+    inverterVoltageShutdown = payload.toFloat();
+  }
+
+  if (action == "resetEnergy") {
+    pzem.resetEnergy();
+  }
+
   if (actionName != "") {
-    String relayStatus = (payload == "state:on") ? "เปิด" : "ปิด";
+    checkCurrentStatus(true);
+
+    String relayStatus = String((payload == "state:on") ? "เปิด" : "ปิด");
     String msq = (messageInfo != "") ? messageInfo : "";
     msq += "\r\n===============\r\n- Relay Switch Status -\r\n" + actionName + ": " + relayStatus;
     msq += (isAuto) ? " (Auto)" : " (Manual)";
     Line_Notify(msq);
     Serial.println("[" + actionName + "]: " + relayStatus);
-
-    checkCurrentStatus(true);
   }
 }
 
 void checkCurrentStatus(bool sendLineNotify) {
-  String output;
-
+  // For ArduinoJson 6.X
   //  StaticJsonDocument<1024> doc;
   //  doc["data"] = "ESP8266";
-  //  doc["time"] = NowString();
+  //  doc["lastUpdated"] = NowString();
   //
   //  //For Display on UI with socket.io
   //  JsonObject object = doc.createNestedObject("deviceState");
@@ -289,8 +490,29 @@ void checkCurrentStatus(bool sendLineNotify) {
   //  object["SW2"] = String((digitalRead(SW2) == LOW) ? "ON" : "OFF");
   //  object["SW3"] = String((digitalRead(SW3) == LOW) ? "ON" : "OFF");
   //  object["SW4"] = String((digitalRead(SW4) == LOW) ? "ON" : "OFF");
+  //  object["inverterVoltageStart"] = inverterVoltageStart;
+  //  object["inverterVoltageShutdown"] = inverterVoltageShutdown;
+  //  object["IpAddress"] = WiFi.localIP().toString();
+  //  String output;
   //  serializeJson(doc, output);
 
+  StaticJsonBuffer<512> jsonBuffer;
+  JsonObject& root = jsonBuffer.createObject();
+  root["deviceName"] = deviceName;
+  root["deviceId"] = device_id;
+  root["lastUpdated"] = NowString();
+
+  JsonObject& data = root.createNestedObject("deviceState");
+  data["SW1"] = String((digitalRead(SW1) == LOW) ? "ON" : "OFF");
+  data["SW2"] = String((digitalRead(SW2) == LOW) ? "ON" : "OFF");
+  data["SW3"] = String((digitalRead(SW3) == LOW) ? "ON" : "OFF");
+  data["SW4"] = String((digitalRead(SW4) == LOW) ? "ON" : "OFF");
+  data["inverterVoltageStart"] = inverterVoltageStart;
+  data["inverterVoltageShutdown"] = inverterVoltageShutdown;
+  data["IpAddress"] = WiFi.localIP().toString();
+
+  String output;
+  root.prettyPrintTo(output);
 
   socket.sendJSON(SocketIoChannel, output);
 
@@ -307,27 +529,62 @@ void checkCurrentStatus(bool sendLineNotify) {
 
 void setup_Wifi() {
   WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   if (WiFi.getMode() & WIFI_AP) {
     WiFi.softAPdisconnect(true);
   }
 
-  USE_SERIAL.println();
+  Serial.println();
+  printMessage(0, 1, "WIFI Connecting...", true);
+  oled.setTextXY(1, 1);
+
   while (WiFi.status() != WL_CONNECTED)
   {
     delay(500);
     Serial.print(".");
+    oled.putString(".");
   }
 
-  USE_SERIAL.println();
-  USE_SERIAL.print("WIFI Connected ");
-  String ip = WiFi.localIP().toString();    USE_SERIAL.println(ip.c_str());
-  USE_SERIAL.println("Socket.io Server: "); USE_SERIAL.print(ServerHost);
-  USE_SERIAL.println();
+
+  oled.clearDisplay();
+
+  Serial.println();
+  Serial.print("WIFI Connected ");
+  String ip = WiFi.localIP().toString();
+  Serial.println(ip.c_str());
+  Serial.println("Socket.io Server: "); Serial.print(SOCKETIO_HOST);
+  Serial.println();
+
+  oled.setTextXY(0, 1); oled.putString("IP Addr : " + ip);
+  oled.setTextXY(1, 1); oled.putString("Server  : " + String(SOCKETIO_HOST));
+}
+
+void InitialOLED() {
+  Wire.begin();
+  oled.init(); // Initialze SSD1306 OLED display
+  //oled.setInverseDisplay();
+  oled.deactivateScroll();
+  oled.clearDisplay(); // Clear screen
+  oled.setFont(font5x7);
+  //oled.setFont(font8x8);
+
+  for (int i = 0; i < 8; i++) {
+    oled.setTextXY(i, 1);
+    oled.putString("                              ");
+  }
+}
+
+void setup_IpAddress() {
+  IPAddress local_ip = {192, 168, 137, 144};
+  IPAddress gateway = {192, 168, 137, 1};
+  IPAddress subnet = {255, 255, 255, 0};
+  WiFi.config(local_ip, gateway, subnet);
 }
 
 void Line_Notify(String message) {
+  if (!enableLineNotify) return;
+
   WiFiClientSecure client;
   if (!client.connect("notify-api.line.me", 443)) {
     Serial.println("connection failed");
@@ -344,7 +601,11 @@ void Line_Notify(String message) {
   req += "Content-Length: " + String(String("message=" + message).length()) + "\r\n";
   req += "\r\n";
   req += "message=" + message;
-  Serial.println(req);
+
+  Serial.println("Send Line-Notify");
+  if (isDebugMode)
+    Serial.println(req);
+
   client.print(req);
   delay(20);
 
@@ -354,15 +615,23 @@ void Line_Notify(String message) {
     if (line == "\r") {
       break;
     }
-    Serial.println(line);
+    if (isDebugMode)
+      Serial.println(line);
   }
   Serial.println("-------------");
+}
+
+void setUpFireBase() {
+  Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
+  Firebase.reconnectWiFi(true);
+  Firebase.setMaxRetry(firebaseData, 3);
+  Firebase.setMaxErrorQueue(firebaseData, 30);
+  Firebase.enableClassicRequest(firebaseData, true);
 }
 
 String NowString() {
   time_t now = time(nullptr);
   struct tm* newtime = localtime(&now);
-
   String tmpNow = "";
   tmpNow += String(newtime->tm_hour);
   tmpNow += ":";
@@ -373,14 +642,12 @@ String NowString() {
 }
 
 void setupTimeZone() {
-
   configTime(timezone * 3600, dst, ntp_server1, ntp_server2, ntp_server3);
-
-  USE_SERIAL.println("Waiting for time");
+  Serial.println("Waiting for time");
   while (!time(nullptr)) {
-    USE_SERIAL.print(".");
+    Serial.print(".");
     delay(500);
   }
-  USE_SERIAL.println();
-  USE_SERIAL.println("Now: " + NowString());
+  Serial.println();
+  Serial.println("Now: " + NowString());
 }
