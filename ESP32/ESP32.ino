@@ -81,7 +81,7 @@ float inverterVoltageShutdown = 12.00;
 float hightVoltage = 13.80;
 float lowVoltage = 10.50;
 
-bool isDebugMode = true;
+bool isDebugMode = false;
 bool enableLineNotify = false;
 bool enableSocketIO = false;
 
@@ -184,14 +184,12 @@ void loop() {
     batteryStatusMessage += "POWER: " + String(power) + "W\r\n";
     batteryStatusMessage += "ENERGY: " + String(energy) + "WH";
 
-    bool activeInverter = (voltage >= inverterVoltageStart) ? true : (voltage <= inverterVoltageShutdown) ? false : inverterStarted;
-    if (inverterStarted != activeInverter) {
-      actionCommand("SW1", activeInverter ? "state:on" : "state:off", batteryStatusMessage, true);
-      inverterStarted = activeInverter;
-      Serial.println("inverterStarted: " + String(inverterStarted) + " activeInverter:" + String(activeInverter));
+    if ((voltage >= inverterVoltageStart && voltage <= hightVoltage) &&  !inverterStarted) {
+      inverterStarted = true;
+      actionCommand("SW1", "state:on", batteryStatusMessage, true);
     }
 
-    if (voltage < lowVoltage || voltage > hightVoltage) {
+    if ((voltage < lowVoltage || voltage >= hightVoltage || voltage <= inverterVoltageShutdown) && inverterStarted) {
       inverterStarted = false;
       actionCommand("SW1", "state:off", batteryStatusMessage, true);
     }
@@ -468,7 +466,9 @@ void actionCommand(String action, String payload, String messageInfo, bool isAut
     msq += "\r\n===============\r\n- Relay Switch Status -\r\n" + actionName + ": " + relayStatus;
     msq += (isAuto) ? " (Auto)" : " (Manual)";
     Line_Notify(msq);
-    Serial.println("[" + actionName + "]: " + relayStatus);
+
+    if (isDebugMode)
+      Serial.println("[" + actionName + "]: " + relayStatus);
   }
 }
 
@@ -578,7 +578,10 @@ void setup_IpAddress() {
 }
 
 void Line_Notify(String message) {
-  if (!enableLineNotify) return;
+  Serial.println("Send Line-Notify");
+
+  if (!enableLineNotify)
+    return;
 
   WiFiClientSecure client;
   if (!client.connect("notify-api.line.me", 443)) {
@@ -597,7 +600,6 @@ void Line_Notify(String message) {
   req += "\r\n";
   req += "message=" + message;
 
-  Serial.println("Send Line-Notify");
   if (isDebugMode)
     Serial.println(req);
 
