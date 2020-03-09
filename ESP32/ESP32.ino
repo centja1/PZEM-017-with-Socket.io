@@ -83,6 +83,7 @@ float lowVoltage = 10.50;
 
 bool isDebugMode = true;
 bool enableLineNotify = false;
+bool enableSocketIO = false;
 
 WiFiServer server(80);
 
@@ -112,6 +113,7 @@ int SW5 = 32;
 
 //Indicates that the master needs to read 8 registers with slave address 0x01 and the start address of the register is 0x0000.
 static uint8_t pzemSlaveAddr = 0x01; // PZEM default address
+
 //Make sure RX (16) & TX (17) is connected jumper
 PZEM017 pzem(&Serial2, pzemSlaveAddr, 9600);
 DHTesp dht;
@@ -140,9 +142,7 @@ void setup() {
   setupTimeZone();
   setUpFireBase();
   handleRelaySwitch();
-
 }
-
 
 bool inverterStarted = false;
 String batteryStatusMessage;
@@ -301,7 +301,8 @@ String createResponse(float voltage, float current, float power, float energy, u
   }
 
   //Publish to socket.io server
-  socket.sendJSON(SocketIoChannel, output);
+  if (enableSocketIO)
+    socket.sendJSON(SocketIoChannel, output);
 
   if (isDebugMode)
     Serial.print(output);
@@ -507,7 +508,8 @@ void checkCurrentStatus(bool sendLineNotify) {
   String output;
   root.prettyPrintTo(output);
 
-  socket.sendJSON(SocketIoChannel, output);
+  if (enableSocketIO)
+    socket.sendJSON(SocketIoChannel, output);
 
   if (sendLineNotify) {
     //Send to Line Notify
