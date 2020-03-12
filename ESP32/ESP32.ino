@@ -81,9 +81,9 @@ float inverterVoltageShutdown = 12.00;
 float hightVoltage = 13.80;
 float lowVoltage = 10.50;
 
-bool isDebugMode = false;
-bool enableLineNotify = false;
-bool enableSocketIO = false;
+bool isDebugMode = true;
+bool enableLineNotify = true;
+bool enableSocketIO = true;
 
 WiFiServer server(80);
 
@@ -163,7 +163,7 @@ void loop() {
   // PZEM-017
   float voltage = !isnan(pzem.voltage()) ? pzem.voltage() : 0;
   float current = !isnan(pzem.current()) ? pzem.current() : 0;
-  float power = !isnan(pzem.power()) ? pzem.power() : 0;
+  float power = !isnan(pzem.power()) ? pzem.power() * 10 : 0;
   float energy = !isnan(pzem.energy()) ? pzem.energy() : 0;
   uint16_t over_power_alarm = pzem.VoltHighAlarm();
   uint16_t lower_power_alarm = pzem.VoltLowAlarm();
