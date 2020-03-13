@@ -56,6 +56,9 @@ export default (): ReactElement => {
   const [currentGauge, setCurrentGauge] = useState<number>(0);
   const [powerGauge, setPowerGauge] = useState<number>(0);
   const [energyGauge, setEnergyGauge] = useState<number>(0);
+  const [temperature, setTemperature] = useState<number>(0);
+  const [humidity, setHumidity] = useState<number>(0);
+
   const [batteryData, setBatteryData] = useState<any>([
     {
       id: "power (W)",
@@ -73,6 +76,9 @@ export default (): ReactElement => {
       data: []
     }
   ]);
+
+
+
   const [deviceData, setDeviceData] = useState<any>([]);
   const [logs, setLogs] = useState<any>([]);
   const [activeTab, setActiveTab] = useState("1");
@@ -116,6 +122,8 @@ export default (): ReactElement => {
         setCurrentGauge(data.sensor.current_usage);
         setPowerGauge(data.sensor.active_power);
         setEnergyGauge(data.sensor.active_energy);
+        setTemperature(data.sensor.temperature);
+        setHumidity(data.sensor.humidity);
 
         setDeviceData({
           voltage: data.sensor.voltage_usage,
@@ -278,10 +286,10 @@ export default (): ReactElement => {
         <div className="led-green" style={{ marginLeft: "5px" }}></div>
       </div>
     ) : (
-      <div className="led-box" style={{ marginRight: "10px" }}>
-        <div className="led-red" style={{ marginLeft: "5px" }}></div>
-      </div>
-    );
+        <div className="led-box" style={{ marginRight: "10px" }}>
+          <div className="led-red" style={{ marginLeft: "5px" }}></div>
+        </div>
+      );
   };
 
   const rangNumber = (start: number, end: number) => {
@@ -309,6 +317,119 @@ export default (): ReactElement => {
       <TabContent activeTab={activeTab}>
         <TabPane tabId="1">
           <Row>
+            <Col sm="3" style={{ background: "linear-gradient(45deg, black, transparent)" }}>
+              <div style={{ paddingTop: "15px" }}>
+                <strong style={{ textAlign: "center" }}>Relay Switch</strong>
+              </div>
+              <br />
+
+              <div>
+                {/* {inverterSwitch ? "ON " : "OFF "}{" "} */}
+                <Button
+                  disabled={disableBtnInverterSw}
+                  onClick={() => handleSwitch(1)}
+                  color="primary"
+                  style={{ margin: 5, width: 200, height: 50 }}
+                >
+                  Inverter <FontAwesomeIcon icon={faBroadcastTower} size="lg" />
+                  {Blik(inverterSwitch)}
+                </Button>
+              </div>
+              <div>
+                {/* {lampSwitch ? "ON " : "OFF "}{" "} */}
+                <Button
+                  disabled={disableBtnLampSw}
+                  onClick={() => handleSwitch(2)}
+                  color="warning"
+                  style={{ margin: 5, width: 200, height: 50 }}
+                >
+                  Lamp <FontAwesomeIcon icon={faLightbulb} size="lg" />
+                  {Blik(lampSwitch)}
+                </Button>
+              </div>
+              <div>
+                {/* {waterfallPumpSwitch ? "ON " : "OFF "}{" "} */}
+                <Button
+                  disabled={disableBtnWaterfallPumpSw}
+                  onClick={() => handleSwitch(3)}
+                  color="info"
+                  style={{ margin: 5, width: 200, height: 50 }}
+                >
+                  Waterfall Pump <FontAwesomeIcon icon={faWater} size="lg" />
+                  {Blik(waterfallPumpSwitch)}
+                </Button>
+              </div>
+              <div>
+                {/* {waterSprinkler ? "ON " : "OFF "} */}
+                <Button
+                  disabled={disableBtnWaterSprinklerSw}
+                  onClick={() => handleSwitch(4)}
+                  color="success"
+                  style={{ margin: 5, width: 200, height: 50 }}
+                >
+                  Water Sprinkler <FontAwesomeIcon icon={faShower} size="lg" />
+                  {Blik(waterSprinkler)}
+                </Button>
+              </div>
+
+              <br />
+              <div style={{ color: "white" }}>
+                <strong style={{ textAlign: "center" }}>State of Charge</strong>
+              </div>
+              <div className="single-chart" style={{ color: "white" }}>
+                <svg viewBox="0 0 36 36" className="circular-chart green">
+                  <path
+                    className="circle-bg"
+                    d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <path
+                    className="circle"
+                    stroke-dasharray={percentageCharge.toFixed(2) + ", 100"}
+                    d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <text x="18" y="20.35" className="percentage">
+                    {percentageCharge.toFixed(1) + "%"}
+                  </text>
+                </svg>
+
+                <div style={{ textAlign: "center", fontSize: "x-small" }}>
+                  <strong>Device IP: {deviceIpAddress}</strong>
+                  <br />
+                  <strong>
+                    Inverter Start : {inverterVoltageStart}V, Shutdown :{" "}
+                    {inverterVoltageShutdown}V
+                  </strong>
+                  <br />
+                  <strong>Temperature : {temperature} C&deg;</strong>
+                  <br />
+                  <strong>Humidity : {humidity} %</strong>
+                </div>
+              </div>
+
+              <div>
+                <Button
+                  onClick={handleSystemCheck}
+                  color="secondary"
+                  style={{ margin: 5, width: 200, height: 50 }}
+                >
+                  Check <FontAwesomeIcon icon={faCheckCircle} size="lg" />
+                </Button>
+              </div>
+
+              <div>
+                <Button
+                  onClick={handleEnergyReset}
+                  color="danger"
+                  style={{ margin: 5, width: 200, height: 50 }}
+                >
+                  Energy Reset <FontAwesomeIcon icon={faSyncAlt} size="lg" />
+                </Button>
+              </div>
+            </Col>
             <Col sm="9">
               <Container>
                 <Row>
@@ -503,116 +624,103 @@ export default (): ReactElement => {
                     /> */}
                   </Col>
                 </Row>
+                <Row>
+                  <Col sm="2"></Col>
+                  <Col sm="2" style={{ textAlign: "center" }}>
+                    <Gauge
+                      chartTitle="Temperature"
+                      min={0}
+                      max={100}
+                      height={230}
+                      units="C&deg;"
+                      plotBands={[
+                        {
+                          from: 0,
+                          to: 15,
+                          color: "rgba(0, 255, 10, .50)"
+                        },
+                        {
+                          from: 15,
+                          to: 35,
+                          color: "rgba(10, 10, 10, .25)"
+                        },
+                        {
+                          from: 35,
+                          to: 60,
+                          color: "rgba(255, 255, 10, .50)"
+                        },
+                        {
+                          from: 60,
+                          to: 100,
+                          color: "rgba(255, 50, 50, .50)"
+                        }
+                      ]}
+                      majorTicks={[
+                        0,
+                        10,
+                        20,
+                        30,
+                        40,
+                        50,
+                        60,
+                        70,
+                        80,
+                        90,
+                        100
+                      ]}
+                      value={temperature}
+                    />
+                  </Col>
+                  <Col sm="2"></Col>
+                  <Col sm="2" style={{ textAlign: "center" }}>
+                    <Gauge
+                      chartTitle="Humidity"
+                      min={0}
+                      max={100}
+                      height={230}
+                      units="H (%)"
+                      plotBands={[
+                        {
+                          from: 0,
+                          to: 30,
+                          color: "rgba(255, 50, 50, .50)"
+                        }
+                        ,
+                        {
+                          from: 30,
+                          to: 50,
+                          color: "rgba(255, 255, 10, .50)"
+                        },
+                        {
+                          from: 50,
+                          to: 70,
+                          color: "rgba(10, 10, 10, .25)"
+                        },
+
+                        {
+                          from: 70,
+                          to: 100,
+                          color: "rgba(0, 255, 10, .50)"
+                        }
+                      ]}
+                      majorTicks={[
+                        0,
+                        10,
+                        20,
+                        30,
+                        40,
+                        50,
+                        60,
+                        70,
+                        80,
+                        90,
+                        100
+                      ]}
+                      value={humidity}
+                    />
+                  </Col>
+                </Row>
               </Container>
-            </Col>
-            <Col sm="3">
-              <div>
-                <strong style={{ textAlign: "center" }}>Relay Switch</strong>
-              </div>
-              <br />
-
-              <div>
-                {inverterSwitch ? "ON " : "OFF "}{" "}
-                <Button
-                  disabled={disableBtnInverterSw}
-                  onClick={() => handleSwitch(1)}
-                  color="primary"
-                  style={{ margin: 5, width: 200, height: 50 }}
-                >
-                  Inverter <FontAwesomeIcon icon={faBroadcastTower} size="lg" />
-                  {Blik(inverterSwitch)}
-                </Button>
-              </div>
-              <div>
-                {lampSwitch ? "ON " : "OFF "}{" "}
-                <Button
-                  disabled={disableBtnLampSw}
-                  onClick={() => handleSwitch(2)}
-                  color="warning"
-                  style={{ margin: 5, width: 200, height: 50 }}
-                >
-                  Lamp <FontAwesomeIcon icon={faLightbulb} size="lg" />
-                  {Blik(lampSwitch)}
-                </Button>
-              </div>
-              <div>
-                {waterfallPumpSwitch ? "ON " : "OFF "}{" "}
-                <Button
-                  disabled={disableBtnWaterfallPumpSw}
-                  onClick={() => handleSwitch(3)}
-                  color="info"
-                  style={{ margin: 5, width: 200, height: 50 }}
-                >
-                  Waterfall Pump <FontAwesomeIcon icon={faWater} size="lg" />
-                  {Blik(waterfallPumpSwitch)}
-                </Button>
-              </div>
-              <div>
-                {waterSprinkler ? "ON " : "OFF "}
-                <Button
-                  disabled={disableBtnWaterSprinklerSw}
-                  onClick={() => handleSwitch(4)}
-                  color="success"
-                  style={{ margin: 5, width: 200, height: 50 }}
-                >
-                  Water Sprinkler <FontAwesomeIcon icon={faShower} size="lg" />
-                  {Blik(waterSprinkler)}
-                </Button>
-              </div>
-
-              <br />
-              <div>
-                <strong style={{ textAlign: "center" }}>State of Charge</strong>
-              </div>
-              <div className="single-chart">
-                <svg viewBox="0 0 36 36" className="circular-chart green">
-                  <path
-                    className="circle-bg"
-                    d="M18 2.0845
-                        a 15.9155 15.9155 0 0 1 0 31.831
-                        a 15.9155 15.9155 0 0 1 0 -31.831"
-                  />
-                  <path
-                    className="circle"
-                    stroke-dasharray={percentageCharge.toFixed(2) + ", 100"}
-                    d="M18 2.0845
-                        a 15.9155 15.9155 0 0 1 0 31.831
-                        a 15.9155 15.9155 0 0 1 0 -31.831"
-                  />
-                  <text x="18" y="20.35" className="percentage">
-                    {percentageCharge.toFixed(1) + "%"}
-                  </text>
-                </svg>
-
-                <div style={{ textAlign: "center", fontSize: "x-small" }}>
-                  <strong>Device IP: {deviceIpAddress}</strong>
-                  <br />
-                  <strong>
-                    Inverter Start : {inverterVoltageStart}V, Shutdown :{" "}
-                    {inverterVoltageShutdown}V
-                  </strong>
-                </div>
-              </div>
-
-              <div>
-                <Button
-                  onClick={handleSystemCheck}
-                  color="secondary"
-                  style={{ margin: 5, width: 200, height: 50 }}
-                >
-                  Check <FontAwesomeIcon icon={faCheckCircle} size="lg" />
-                </Button>
-              </div>
-
-              <div>
-                <Button
-                  onClick={handleEnergyReset}
-                  color="danger"
-                  style={{ margin: 5, width: 200, height: 50 }}
-                >
-                  Energy Reset <FontAwesomeIcon icon={faSyncAlt} size="lg" />
-                </Button>
-              </div>
             </Col>
           </Row>
           <Row>
