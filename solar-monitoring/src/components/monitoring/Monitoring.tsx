@@ -30,6 +30,8 @@ import Gauge from "../meters/Gauge";
 import moment from "moment";
 import { subscribeData, unsubscribe, broadcastData } from "../socketio/client";
 import "./monitering.css";
+import Sunny from "../../assets/images/svg/sunny.svg";
+import Cloudy from "../../assets/images/svg/cloudy.svg";
 
 const reduceMessage = (limit: number, logs: any[], reverse = false) => {
   var totalRows = 0;
@@ -300,6 +302,18 @@ export default (): ReactElement => {
     return foo;
   };
 
+ const isDay = () =>  {
+    const hours = (new Date()).getHours();
+    return (hours >= 6 && hours < 18);
+  }
+
+  const currentDate = () => {
+    var d = new Date();
+    var options = { weekday: 'long' };
+    var dayName = d.toLocaleDateString('en-US', options).substr(0,3).toUpperCase();
+    return `${dayName} ${d.getDate()} / ${d.getFullYear().toString().substr(2,2)}`;
+  }
+
   return (
     <div>
       <Nav tabs>
@@ -371,10 +385,9 @@ export default (): ReactElement => {
                   {Blik(waterSprinkler)}
                 </Button>
               </div>
-
               <br />
               <div style={{ color: "white" }}>
-                <strong style={{ textAlign: "center" }}>State of Charge</strong>
+                <strong style={{ textAlign: "center" }}>Battery State of Charge</strong>
               </div>
               <div className="single-chart" style={{ color: "white" }}>
                 <svg viewBox="0 0 36 36" className="circular-chart green">
@@ -394,22 +407,36 @@ export default (): ReactElement => {
                   <text x="18" y="20.35" className="percentage">
                     {percentageCharge.toFixed(1) + "%"}
                   </text>
+                  <text x="11" y="25" style={{fill:"white", fontSize:"0.16em"}}>
+                   { voltageGauge.toFixed(2) + "V / " + currentGauge.toFixed(2) + "A"  }
+                  </text>
                 </svg>
-
-                <div style={{ textAlign: "center", fontSize: "x-small" }}>
+                <div style={{textAlign:"center", marginBottom:"40px"}}>
+                    <div style={{width:"23%", float:"left", display:"inline"}}>
+                      {
+                        isDay() ? 
+                        <img alt="icon" src={Sunny} />  :
+                        <img alt="icon" src={Cloudy} />
+                      }                    
+                    </div>
+                    <div style={{float:"left", display:"inline", textAlign:"left", fontWeight:"bold", fontSize:"smaller"}}>
+                      <span>
+                        { isDay() ? 'Sunny': 'Cloudy' } { currentDate() }<br/>
+                        Temperature : { temperature.toFixed(1) } C°<br/>
+                        Humidity : { humidity.toFixed(1) } %
+                      </span>
+                  </div>
+                </div>
+                <br/>
+                <div style={{ textAlign: "center", fontSize: "x-small", marginTop:"20px"}}>
                   <strong>Device IP: {deviceIpAddress}</strong>
                   <br />
                   <strong>
                     Inverter Start : {inverterVoltageStart}V, Shutdown :{" "}
                     {inverterVoltageShutdown}V
                   </strong>
-                  <br />
-                  <strong>Temperature : {temperature} C&deg;</strong>
-                  <br />
-                  <strong>Humidity : {humidity} %</strong>
                 </div>
               </div>
-
               <div>
                 <Button
                   onClick={handleSystemCheck}
