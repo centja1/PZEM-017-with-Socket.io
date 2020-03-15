@@ -332,9 +332,7 @@ export default (): ReactElement => {
         <TabPane tabId="1">
           <Row>
             <Col sm="3" style={{ background: "linear-gradient(45deg, black, transparent)" }}>
-              <div style={{ paddingTop: "15px" }}>
-                <strong style={{ textAlign: "center" }}>Relay Switch</strong>
-              </div>
+           
               <br />
 
               <div>
