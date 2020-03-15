@@ -405,7 +405,7 @@ export default (): ReactElement => {
                   <text x="18" y="20.35" className="percentage">
                     {percentageCharge.toFixed(1) + "%"}
                   </text>
-                  <text x="11" y="25" style={{fill:"white", fontSize:"0.16em"}}>
+                  <text x="10" y="25" style={{fill:"white", fontSize:"0.16em"}}>
                    { voltageGauge.toFixed(2) + "V / " + currentGauge.toFixed(2) + "A"  }
                   </text>
                 </svg>
