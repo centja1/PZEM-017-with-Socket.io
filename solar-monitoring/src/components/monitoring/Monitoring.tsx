@@ -101,7 +101,7 @@ export default (): ReactElement => {
   );
 
   const [inverterVoltageStart, setInverterVoltageStart] = useState(13.15);
-  const [inverterVoltageShutdown, setInverterVoltageShutdown] = useState(12.15);
+  const [inverterVoltageShutdown, setInverterVoltageShutdown] = useState(11.20);
 
   const [percentageCharge, setPercentageCharge] = useState(0);
 

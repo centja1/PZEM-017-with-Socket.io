@@ -77,7 +77,7 @@ char ntp_server3[20] = "time.uni.net.th";
 int dst = 0;
 
 float inverterVoltageStart = 13.10;
-float inverterVoltageShutdown = 12.00;
+float inverterVoltageShutdown = 11.20;
 float hightVoltage = 13.80;
 float lowVoltage = 10.50;
 
