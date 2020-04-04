@@ -131,7 +131,7 @@ void setup() {
   //pzem.setHIVoltageAlarm(48);
 
   dht.setup(DHTpin, DHTesp::DHT11); //for DHT11 Connect DHT sensor to GPIO 15
-
+  pinMode(LED_BUILTIN, OUTPUT);
   if (!socket.connect(SOCKETIO_HOST, SOCKETIO_PORT)) {
     Serial.println("connection failed");
   }
@@ -145,6 +145,7 @@ void setup() {
 }
 
 bool inverterStarted = false;
+bool solarboxFanStarted = false;
 String batteryStatusMessage;
 
 void loop() {
@@ -176,7 +177,7 @@ void loop() {
   oled.putString("- S1:" + String((digitalRead(SW1) == LOW) ? "ON" : "OFF") + " S2:" + String((digitalRead(SW2) == LOW) ? "ON" : "OFF") + " S3:" + String((digitalRead(SW3) == LOW) ? "ON" : "OFF") + " -");
 
   if (voltage > 3 && voltage < 300) {
-
+    digitalWrite(LED_BUILTIN, HIGH);
     //Build Messages For Line Notify
     batteryStatusMessage = "\r\n===============\r\n - Battery Status - \r\n";
     batteryStatusMessage += "VOLTAGE: " + String(voltage) + "V\r\n";
@@ -185,13 +186,11 @@ void loop() {
     batteryStatusMessage += "ENERGY: " + String(energy) + "WH";
 
     if ((voltage >= inverterVoltageStart && voltage <= hightVoltage) &&  !inverterStarted) {
-      inverterStarted = true;
-      actionCommand("SW1", "state:on", batteryStatusMessage, true);
+      actionCommand("SW1", "state:on", batteryStatusMessage, true, true);
     }
 
     if ((voltage < lowVoltage || voltage >= hightVoltage || voltage <= inverterVoltageShutdown) && inverterStarted) {
-      inverterStarted = false;
-      actionCommand("SW1", "state:off", batteryStatusMessage, true);
+      actionCommand("SW1", "state:off", batteryStatusMessage, true, true);
     }
 
     createResponse(voltage, current, power, energy, over_power_alarm, lower_power_alarm, humidity, temperature, true);
@@ -211,16 +210,39 @@ void loop() {
   }
 
   if (socket.monitor() && RID == SocketIoChannel && socket.connected()) {
-    actionCommand(Rname, Rcontent, "", false);
+    actionCommand(Rname, Rcontent, "", false, true);
   }
 
   //Shutdown Inverter on 15:00
   time_t now = time(nullptr);
   struct tm* p_tm = localtime(&now);
   if (p_tm->tm_hour == 15 && p_tm->tm_min == 0 && p_tm->tm_sec == 0) {
-    actionCommand("SW1", "state:off", "Invert หยุดทำงาน ที่เวลา 15:00", true);
+    actionCommand("SW1", "state:off", "Invert หยุดทำงาน ที่เวลา 15:00", true, true);
   }
 
+  //Shutdown Inverter on 16:30
+  if (p_tm->tm_hour == 16 && p_tm->tm_min == 30 && p_tm->tm_sec == 0) {
+    actionCommand("SW1", "state:off", "", true, false);
+    actionCommand("SW2", "state:off", " ", true, false);
+  }
+
+  //  Solar Fan Cooling Start
+  if ((int)temperature >= 40) {
+    if (!solarboxFanStarted) {
+      Serial.println("Fan Start");
+      actionCommand("SW2", "state:on", "Start SolarBox Fan", true, true);
+    }
+  }
+
+  //  Solar Fan Cooling Start
+  if ((int)temperature <= 38) {
+    if (solarboxFanStarted) {
+      Serial.println("Fan Stoped");
+      actionCommand("SW2", "state:off", "Stoped SolarBox Fan", true, true);
+    }
+  }
+
+  // Reset FirebaseData per day
   if (p_tm->tm_hour == 23 && p_tm->tm_min == 59)   {
     if (Firebase.deleteNode(firebaseData, "/data")) {
       Serial.print("delete /data failed:");
@@ -229,6 +251,7 @@ void loop() {
   }
 
   delay(2000);
+  digitalWrite(LED_BUILTIN, LOW);
 }
 
 
@@ -417,7 +440,7 @@ void httpServer() {
   }
 }
 
-void actionCommand(String action, String payload, String messageInfo, bool isAuto) {
+void actionCommand(String action, String payload, String messageInfo, bool isAuto, bool isSendNotify) {
   Serial.println("State => " + payload);
   if (action == "") return;
 
@@ -425,11 +448,13 @@ void actionCommand(String action, String payload, String messageInfo, bool isAut
   if (action == "SW1") {
     actionName = "TBE Inverter 4000w";
     digitalWrite(SW1, (payload == "state:on") ? LOW : HIGH);
+    inverterStarted = (payload == "state:on");
   }
 
   if (action == "SW2") {
-    actionName = "Lamp";
+    actionName = "Cooling Fans";
     digitalWrite(SW2, (payload == "state:on") ? LOW : HIGH);
+    solarboxFanStarted = (payload == "state:on");
   }
 
   if (action == "SW3") {
@@ -465,7 +490,8 @@ void actionCommand(String action, String payload, String messageInfo, bool isAut
     String msq = (messageInfo != "") ? messageInfo : "";
     msq += "\r\n===============\r\n- Relay Switch Status -\r\n" + actionName + ": " + relayStatus;
     msq += (isAuto) ? " (Auto)" : " (Manual)";
-    Line_Notify(msq);
+    if (isSendNotify)
+      Line_Notify(msq);
 
     if (isDebugMode)
       Serial.println("[" + actionName + "]: " + relayStatus);
@@ -515,7 +541,7 @@ void checkCurrentStatus(bool sendLineNotify) {
     //Send to Line Notify
     String status = "\r\nRelay Switch Status";
     status += "\r\nTBE Inverter 4000w: " + String((digitalRead(SW1) == LOW) ? "เปิด" : "ปิด");
-    status += "\r\nLamp: " + String((digitalRead(SW2) == LOW) ? "เปิด" : "ปิด");
+    status += "\r\nCooling Fans: " + String((digitalRead(SW2) == LOW) ? "เปิด" : "ปิด");
     status += "\r\nWaterfall Pump: " + String((digitalRead(SW3) == LOW) ? "เปิด" : "ปิด");
     status += "\r\nWater Sprinkler: " + String((digitalRead(SW4) == LOW) ? "เปิด" : "ปิด");
     Line_Notify(status);

@@ -14,12 +14,12 @@ import classnames from "classnames";
 import _ from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faLightbulb,
   faShower,
   faWater,
   faBroadcastTower,
   faCheckCircle,
-  faSyncAlt
+  faSyncAlt,
+  faFan
 } from "@fortawesome/free-solid-svg-icons";
 
 //init module
@@ -87,12 +87,12 @@ export default (): ReactElement => {
   const [deviceIpAddress, setDeviceIpAddress] = useState("");
 
   const [inverterSwitch, setInverterSwitch] = useState(false);
-  const [lampSwitch, setLampSwitch] = useState(false);
+  const [coolingFans, setCoolingFans] = useState(false);
   const [waterfallPumpSwitch, setWaterfallPumpSwitch] = useState(false);
   const [waterSprinkler, setWaterSprinkler] = useState(false);
 
   const [disableBtnInverterSw, setDisableBtnInverterSw] = useState(false);
-  const [disableBtnLampSw, setDisableBtnLampSw] = useState(false);
+  const [disableBtnCoolingFansSw, setDisableBtnCoolingFansSw] = useState(false);
   const [disableBtnWaterfallPumpSw, setDisableBtnWaterfallPumpSw] = useState(
     false
   );
@@ -148,14 +148,14 @@ export default (): ReactElement => {
         } = data.deviceState;
         setDeviceIpAddress(IpAddress);
         setInverterSwitch(SW1 === "ON");
-        setLampSwitch(SW2 === "ON");
+        setCoolingFans(SW2 === "ON");
         setWaterfallPumpSwitch(SW3 === "ON");
         setWaterSprinkler(SW4 === "ON");
         setInverterVoltageStart(inverterVoltageStart);
         setInverterVoltageShutdown(inverterVoltageShutdown);
 
         setDisableBtnInverterSw(false);
-        setDisableBtnLampSw(false);
+        setDisableBtnCoolingFansSw(false);
         setDisableBtnWaterfallPumpSw(false);
         setDisableBtnWaterSprinklerSw(false);
 
@@ -258,8 +258,8 @@ export default (): ReactElement => {
         setDisableBtnInverterSw(true);
         break;
       case 2:
-        broadcastData("SW2", !lampSwitch ? "state:on" : "state:off");
-        setDisableBtnLampSw(true);
+        broadcastData("SW2", !coolingFans ? "state:on" : "state:off");
+        setDisableBtnCoolingFansSw(true);
         break;
       case 3:
         broadcastData("SW3", !waterfallPumpSwitch ? "state:on" : "state:off");
@@ -302,7 +302,7 @@ export default (): ReactElement => {
     return foo;
   };
 
- const isDay = () =>  {
+  const isDay = () => {
     const hours = (new Date()).getHours();
     return (hours >= 6 && hours < 18);
   }
@@ -310,8 +310,8 @@ export default (): ReactElement => {
   const currentDate = () => {
     var d = new Date();
     var options = { weekday: 'long' };
-    var dayName = d.toLocaleDateString('en-US', options).substr(0,3).toUpperCase();
-    return `${dayName} ${d.getDate()} / ${d.getFullYear().toString().substr(2,2)}`;
+    var dayName = d.toLocaleDateString('en-US', options).substr(0, 3).toUpperCase();
+    return `${dayName} ${d.getDate()} / ${d.getFullYear().toString().substr(2, 2)}`;
   }
 
   return (
@@ -332,7 +332,7 @@ export default (): ReactElement => {
         <TabPane tabId="1">
           <Row>
             <Col sm="3" style={{ background: "linear-gradient(45deg, black, transparent)" }}>
-           
+
               <br />
 
               <div>
@@ -348,15 +348,15 @@ export default (): ReactElement => {
                 </Button>
               </div>
               <div>
-                {/* {lampSwitch ? "ON " : "OFF "}{" "} */}
+                {/* {coolingFans ? "ON " : "OFF "}{" "} */}
                 <Button
-                  disabled={disableBtnLampSw}
+                  disabled={disableBtnCoolingFansSw}
                   onClick={() => handleSwitch(2)}
                   color="warning"
                   style={{ margin: 5, width: 200, height: 50 }}
                 >
-                  Lamp <FontAwesomeIcon icon={faLightbulb} size="lg" />
-                  {Blik(lampSwitch)}
+                  Cooling Fans <FontAwesomeIcon icon={faFan} size="lg" />
+                  {Blik(coolingFans)}       
                 </Button>
               </div>
               <div>
@@ -405,28 +405,28 @@ export default (): ReactElement => {
                   <text x="18" y="20.35" className="percentage">
                     {percentageCharge.toFixed(1) + "%"}
                   </text>
-                  <text x="10" y="25" style={{fill:"white", fontSize:"0.16em"}}>
-                   { voltageGauge.toFixed(2) + "V / " + currentGauge.toFixed(2) + "A"  }
+                  <text x="10" y="25" style={{ fill: "white", fontSize: "0.16em" }}>
+                    {voltageGauge.toFixed(2) + "V / " + currentGauge.toFixed(2) + "A"}
                   </text>
                 </svg>
-                <div style={{textAlign:"center", marginBottom:"40px"}}>
-                    <div style={{width:"23%", float:"left", display:"inline"}}>
-                      {
-                        isDay() ? 
-                        <img alt="icon" src={Sunny} />  :
+                <div style={{ textAlign: "center", marginBottom: "40px" }}>
+                  <div style={{ width: "23%", float: "left", display: "inline" }}>
+                    {
+                      isDay() ?
+                        <img alt="icon" src={Sunny} /> :
                         <img alt="icon" src={Cloudy} />
-                      }                    
-                    </div>
-                    <div style={{float:"left", display:"inline", textAlign:"left", fontWeight:"bold", fontSize:"smaller"}}>
-                      <span>
-                        { isDay() ? 'Sunny': 'Cloudy' } { currentDate() }<br/>
-                        Temperature : { temperature.toFixed(1) } C°<br/>
-                        Humidity : { humidity.toFixed(1) } %
+                    }
+                  </div>
+                  <div style={{ float: "left", display: "inline", textAlign: "left", fontWeight: "bold", fontSize: "smaller" }}>
+                    <span>
+                      {isDay() ? 'Sunny' : 'Cloudy'} {currentDate()}<br />
+                        Temperature : {temperature.toFixed(1)} C°<br />
+                        Humidity : {humidity.toFixed(1)} %
                       </span>
                   </div>
                 </div>
-                <br/>
-                <div style={{ textAlign: "center", fontSize: "x-small", marginTop:"20px"}}>
+                <br />
+                <div style={{ textAlign: "center", fontSize: "x-small", marginTop: "20px" }}>
                   <strong>Device IP: {deviceIpAddress}</strong>
                   <br />
                   <strong>
