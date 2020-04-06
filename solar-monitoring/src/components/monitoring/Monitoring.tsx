@@ -655,7 +655,7 @@ export default (): ReactElement => {
                       chartTitle="Energy"
                       min={0}
                       max={1000}
-                      units="KW/H"
+                      units="W/H"
                       plotBands={[
                         {
                           from: 0,
