@@ -654,42 +654,42 @@ export default (): ReactElement => {
                   <Gauge
                       chartTitle="Energy"
                       min={0}
-                      max={1000}
+                      max={2000}
                       units="W/H"
                       plotBands={[
                         {
                           from: 0,
-                          to: 200,
+                          to: 600,
                           color: "rgba(0, 255, 10, .50)"
                         },
                         {
-                          from: 200,
-                          to: 400,
+                          from: 600,
+                          to: 1200,
                           color: "rgba(10, 10, 10, .25)"
                         },
                         {
-                          from: 400,
-                          to: 700,
+                          from: 1200,
+                          to: 1600,
                           color: "rgba(255, 255, 10, .50)"
                         },
                         {
-                          from: 700,
-                          to: 1000,
+                          from: 1600,
+                          to: 2000,
                           color: "rgba(255, 50, 50, .50)"
                         }
                       ]}
                       majorTicks={[
                         0,
-                        100,
                         200,
-                        300,
                         400,
-                        500,
                         600,
-                        700,
                         800,
-                        900,
-                        1000
+                        1000,
+                        1200,
+                        1400,
+                        1600,
+                        1800,
+                        2000
                       ]}
                       value={energyGauge}
                     />

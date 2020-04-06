@@ -179,7 +179,7 @@ void loop() {
   if (!energy_start || (energy < energy_start)) {
     energy_start = energy;  // Init after restart and hanlde roll-over if any
   }
-  energy_kWhtoday += (energy - energy_start) * 100;
+  energy_kWhtoday += (energy - energy_start);
   energy_start = energy;
 
   oled.setTextXY(2, 1);
@@ -256,13 +256,14 @@ void loop() {
     if (Firebase.deleteNode(firebaseData, "/data")) {
       Serial.print("delete /data failed:");
       Serial.println("Firebase Error: " + firebaseData.errorReason());
+      // reset energy every day
+      pzem.resetEnergy();
     }
   }
 
   delay(2000);
   digitalWrite(LED_BUILTIN, LOW);
 }
-
 
 String createResponse(float voltage, float current, float power, float energy, uint16_t over_power_alarm, uint16_t lower_power_alarm, float humidity, float temperature, bool isOledPrint) {
   //For ArduinoJson 6.X
