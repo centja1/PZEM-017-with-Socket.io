@@ -29,6 +29,7 @@
                                                                         0x0002: 200A
                                                                         0x0003：300A
 
+
   Ref: http://myosuploads3.banggood.com/products/20190723/20190723213410PZEM-003017UserManual.pdf
   Ref: http://solar4living.com/pzem-arduino-modbus.htm
   Ref: https://github.com/armtronix/Wifi-Single-Dimmer-Board/blob/ba577f0539a1fc73145e24bb50342eb1dca86594/Wifi-Single-Dimmer-Board/Arduino_Code/Wifi_single_dimmer_tasmota/sonoff_betaV0.3/xnrg_06_pzem_dc.ino
@@ -36,6 +37,7 @@
   Ref: https://github.com/Links2004/arduinoWebSockets/blob/master/examples/esp8266/WebSocketClientSocketIO/WebSocketClientSocketIO.ino
   Ref: https://github.com/washo4evr/Socket.io-v1.x-Library/blob/master/SocketIOClient.h
   Ref: https://github.com/lorenz4672/PZEM017/blob/master/src/main.cpp
+  Ref: https://solarduino.com/pzem-017-dc-energy-meter-with-arduino/
 
 */
 
@@ -126,7 +128,7 @@ void setup() {
   setup_Wifi();
 
   //pzem.setAddress(0x02);
-  pzem.setCurrentShunt(1);
+  pzem.setCurrentShunt(1); //pzem.setCurrentShunt(0x0001);
   //pzem.setLOWVoltageAlarm(5);
   //pzem.setHIVoltageAlarm(48);
 
@@ -147,7 +149,8 @@ void setup() {
 bool inverterStarted = false;
 bool solarboxFanStarted = false;
 String batteryStatusMessage;
-
+float energy_kWhtoday = 0;
+float energy_start = 0;
 void loop() {
 
   if (!socket.connected()) {
@@ -165,13 +168,19 @@ void loop() {
   float voltage = !isnan(pzem.voltage()) ? pzem.voltage() : 0;
   float current = !isnan(pzem.current()) ? pzem.current() : 0;
   float power = !isnan(pzem.power()) ? pzem.power() * 10 : 0;
-  float energy = !isnan(pzem.energy()) ? pzem.energy() : 0;
+  float energy = !isnan(pzem.energy()) ? pzem.energy() * 10 : 0;
   uint16_t over_power_alarm = pzem.VoltHighAlarm();
   uint16_t lower_power_alarm = pzem.VoltLowAlarm();
   uint16_t powerAlarm = pzem.getPowerAlarm();
   // DHT11
   float humidity = !isnan(dht.getHumidity()) ? dht.getHumidity() : 0;
   float temperature = !isnan(dht.getTemperature()) ? dht.getTemperature() : 0;
+
+  if (!energy_start || (energy < energy_start)) {
+    energy_start = energy;  // Init after restart and hanlde roll-over if any
+  }
+  energy_kWhtoday += (energy - energy_start) * 100;
+  energy_start = energy;
 
   oled.setTextXY(2, 1);
   oled.putString("- S1:" + String((digitalRead(SW1) == LOW) ? "ON" : "OFF") + " S2:" + String((digitalRead(SW2) == LOW) ? "ON" : "OFF") + " S3:" + String((digitalRead(SW3) == LOW) ? "ON" : "OFF") + " -");
@@ -183,7 +192,7 @@ void loop() {
     batteryStatusMessage += "VOLTAGE: " + String(voltage) + "V\r\n";
     batteryStatusMessage += "CURRENT: " + String(current) + "A\r\n";
     batteryStatusMessage += "POWER: " + String(power) + "W\r\n";
-    batteryStatusMessage += "ENERGY: " + String(energy) + "WH";
+    batteryStatusMessage += "ENERGY: " + String(energy_kWhtoday) + "WH";
 
     if ((voltage >= inverterVoltageStart && voltage <= hightVoltage) &&  !inverterStarted) {
       actionCommand("SW1", "state:on", batteryStatusMessage, true, true);
@@ -193,7 +202,7 @@ void loop() {
       actionCommand("SW1", "state:off", batteryStatusMessage, true, true);
     }
 
-    createResponse(voltage, current, power, energy, over_power_alarm, lower_power_alarm, humidity, temperature, true);
+    createResponse(voltage, current, power, energy_kWhtoday, over_power_alarm, lower_power_alarm, humidity, temperature, true);
 
   } else {
     clearDisplay();
@@ -227,10 +236,10 @@ void loop() {
   }
 
   //  Solar Fan Cooling Start
-  if ((int)temperature >= 40) {
+  if ((int)temperature >= 42) {
     if (!solarboxFanStarted) {
       Serial.println("Fan Start");
-      actionCommand("SW2", "state:on", "Start SolarBox Fan", true, true);
+      actionCommand("SW2", "state:on", "Start SolarBox Fan", true, false);
     }
   }
 
@@ -238,7 +247,7 @@ void loop() {
   if ((int)temperature <= 38) {
     if (solarboxFanStarted) {
       Serial.println("Fan Stoped");
-      actionCommand("SW2", "state:off", "Stoped SolarBox Fan", true, true);
+      actionCommand("SW2", "state:off", "Stoped SolarBox Fan", true, false);
     }
   }
 

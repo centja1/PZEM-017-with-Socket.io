@@ -650,13 +650,56 @@ export default (): ReactElement => {
                   </Col>
                 </Row>
                 <Row>
-                  <Col sm="2"></Col>
-                  <Col sm="2" style={{ textAlign: "center" }}>
+                  <Col sm="4" style={{ textAlign: "center" }}>
+                  <Gauge
+                      chartTitle="Energy"
+                      min={0}
+                      max={1000}
+                      units="KW/H"
+                      plotBands={[
+                        {
+                          from: 0,
+                          to: 200,
+                          color: "rgba(0, 255, 10, .50)"
+                        },
+                        {
+                          from: 200,
+                          to: 400,
+                          color: "rgba(10, 10, 10, .25)"
+                        },
+                        {
+                          from: 400,
+                          to: 700,
+                          color: "rgba(255, 255, 10, .50)"
+                        },
+                        {
+                          from: 700,
+                          to: 1000,
+                          color: "rgba(255, 50, 50, .50)"
+                        }
+                      ]}
+                      majorTicks={[
+                        0,
+                        100,
+                        200,
+                        300,
+                        400,
+                        500,
+                        600,
+                        700,
+                        800,
+                        900,
+                        1000
+                      ]}
+                      value={energyGauge}
+                    />
+                  </Col>
+                  <Col sm="4" style={{ textAlign: "center" }}>
                     <Gauge
                       chartTitle="Temperature"
                       min={0}
                       max={100}
-                      height={230}
+                      //height={230}
                       units="C&deg;"
                       plotBands={[
                         {
@@ -696,13 +739,12 @@ export default (): ReactElement => {
                       value={temperature}
                     />
                   </Col>
-                  <Col sm="2"></Col>
-                  <Col sm="2" style={{ textAlign: "center" }}>
+                  <Col sm="4" style={{ textAlign: "center" }}>
                     <Gauge
                       chartTitle="Humidity"
                       min={0}
                       max={100}
-                      height={230}
+                      //height={230}
                       units="H (%)"
                       plotBands={[
                         {
