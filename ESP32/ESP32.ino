@@ -236,7 +236,7 @@ void loop() {
   }
 
   //  Solar Fan Cooling Start
-  if ((int)temperature >= 42) {
+  if ((int)temperature > 0 && (int)temperature >= 42) {
     if (!solarboxFanStarted) {
       Serial.println("Fan Start");
       actionCommand("SW2", "state:on", "Start SolarBox Fan", true, false);
@@ -244,7 +244,7 @@ void loop() {
   }
 
   //  Solar Fan Cooling Start
-  if ((int)temperature <= 38) {
+  if ((int)temperature > 0 && (int)temperature <= 38) {
     if (solarboxFanStarted) {
       Serial.println("Fan Stoped");
       actionCommand("SW2", "state:off", "Stoped SolarBox Fan", true, false);
