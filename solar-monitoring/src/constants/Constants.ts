@@ -3,4 +3,13 @@ const AppConfig = {
   dateFormat: 'Y-M-D HH:mm ss',
 };
 
-export { AppConfig };
+const RelaySwitch = {
+  INVERTER: 'INVERTER',
+  COOLING_FAN: 'COOLING_FAN',
+  LIGHT: 'LIGHT',
+  SPOTLIGHT: 'SPOTLIGHT',
+  WATER_FALL_PUMP: 'WATER_FALL_PUMP',
+  WATER_SPRINKLER: 'WATER_SPRINKLER',
+};
+
+export { AppConfig, RelaySwitch };

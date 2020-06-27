@@ -19,7 +19,7 @@ import Blik from '../common/Blik';
 import DayFlag from './DayFlag';
 import { ReduceMessage, ReduceData } from '../../utils/ReduceMessage';
 import { RangePercentage } from '../../utils/RangePercentage';
-import { AppConfig } from '../../constants/Constants';
+import { AppConfig, RelaySwitch } from '../../constants/Constants';
 import { ChartModel } from '../../typings/chartModel';
 import { LogData } from '../../typings/logData';
 
@@ -75,11 +75,15 @@ const SoiMoisture = (props: SoiMoistureProps) => {
         setTemperature(data.sensor.temperature);
         setHumidity(data.sensor.humidity);
       } else if (data.deviceState) {
-        const { IpAddress, SW1, SW2 } = data.deviceState;
+        const {
+          IpAddress,
+          WATER_FALL_PUMP,
+          WATER_SPRINKLER,
+        } = data.deviceState;
 
         setDeviceIpAddress(IpAddress);
-        setWaterfallPumpSwitch(SW1 === 'ON');
-        setWaterSprinkler(SW2 === 'ON');
+        setWaterfallPumpSwitch(WATER_FALL_PUMP === 'ON');
+        setWaterSprinkler(WATER_SPRINKLER === 'ON');
 
         setDisableBtnWaterfallPumpSw(false);
         setDisableBtnWaterSprinklerSw(false);
@@ -118,11 +122,17 @@ const SoiMoisture = (props: SoiMoistureProps) => {
   const handleSwitch = (sw: number) => {
     switch (sw) {
       case 1:
-        broadcastData('SW1', !waterfallPumpSwitch ? 'state:on' : 'state:off');
+        broadcastData(
+          RelaySwitch.WATER_FALL_PUMP,
+          !waterfallPumpSwitch ? 'state:on' : 'state:off'
+        );
         setDisableBtnWaterfallPumpSw(true);
         break;
       case 2:
-        broadcastData('SW2', !waterSprinkler ? 'state:on' : 'state:off');
+        broadcastData(
+          RelaySwitch.WATER_SPRINKLER,
+          !waterSprinkler ? 'state:on' : 'state:off'
+        );
         setDisableBtnWaterSprinklerSw(true);
         break;
       default:
@@ -144,7 +154,7 @@ const SoiMoisture = (props: SoiMoistureProps) => {
             {/* {waterfallPumpSwitch ? "ON " : "OFF "}{" "} */}
             <Button
               disabled={disableBtnWaterfallPumpSw}
-              onClick={() => handleSwitch(3)}
+              onClick={() => handleSwitch(1)}
               color='info'
               style={{ margin: 5, width: 200, height: 50 }}
             >
@@ -156,7 +166,7 @@ const SoiMoisture = (props: SoiMoistureProps) => {
             {/* {waterSprinkler ? "ON " : "OFF "} */}
             <Button
               disabled={disableBtnWaterSprinklerSw}
-              onClick={() => handleSwitch(4)}
+              onClick={() => handleSwitch(2)}
               color='success'
               style={{ margin: 5, width: 200, height: 50 }}
             >

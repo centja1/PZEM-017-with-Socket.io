@@ -5,8 +5,8 @@
   # Web Site: https://www.rockdevper.com
 
   Relay Switch
-  D5
-  D6
+  D1
+  D2
 
   For Soil Moisture Sensor
   AO (analogPin)
@@ -45,8 +45,8 @@ extern String RID;
 extern String Rname;
 extern String Rcontent;
 
-int SW1 = D5;
-int SW2 = D6;
+int WATER_FALL_PUMP = D1;
+int WATER_SPRINKLER = D2;
 int LEDPIN = 16;
 int ANALOG_PIN = A0;
 
@@ -98,7 +98,7 @@ void loop() {
   time_t now = time(nullptr);
   struct tm* p_tm = localtime(&now);
   if (p_tm->tm_hour == 18 && p_tm->tm_min == 0 && p_tm->tm_sec == 0) {
-    actionCommand("SW1", "state:off", "Invert หยุดทำงาน ที่เวลา 15:00", true);
+    actionCommand("WATER_FALL_PUMP", "state:off", "Invert หยุดทำงาน ที่เวลา 15:00", true);
   }
 
   delay(2000);
@@ -116,6 +116,7 @@ String createResponse(float value) {
   JsonObject& data = root.createNestedObject("sensor");
   data["moisture"] = value;
   //data["current_usage"] = current_usage;
+
 
   if (value > 0) {
     if (moisVal >= 1000) {
@@ -143,18 +144,18 @@ String createResponse(float value) {
 }
 
 void actionCommand(String action, String payload, String messageInfo, bool isAuto) {
-  Serial.println("State => " + payload);
+  Serial.println("State => " + String(action) + " : " +  String(payload));
   if (action == "") return;
 
   String actionName = "";
-  if (action == "SW1") {
-    actionName = "Water Sprinkler";
-    digitalWrite(SW1, (payload == "state:on") ? LOW : HIGH);
+  if (action == "WATER_FALL_PUMP") {
+    actionName = "Waterfall Pump";
+    digitalWrite(WATER_FALL_PUMP, (payload == "state:on") ? LOW : HIGH);
   }
 
-  if (action == "SW2") {
-    actionName = "Waterfall Pump";
-    digitalWrite(SW2, (payload == "state:on") ? LOW : HIGH);
+  if (action == "WATER_SPRINKLER") {
+    actionName = "Water Sprinkler";
+    digitalWrite(WATER_SPRINKLER, (payload == "state:on") ? LOW : HIGH);
   }
 
   if (action == "checking") {
@@ -181,8 +182,8 @@ void checkCurrentStatus(bool sendLineNotify) {
   root["lastUpdated"] = NowString();
 
   JsonObject& data = root.createNestedObject("deviceState");
-  data["SW1"] = String((digitalRead(SW1) == LOW) ? "ON" : "OFF");
-  data["SW2"] = String((digitalRead(SW2) == LOW) ? "ON" : "OFF");
+  data["WATER_FALL_PUMP"] = String((digitalRead(WATER_FALL_PUMP) == LOW) ? "ON" : "OFF");
+  data["WATER_SPRINKLER"] = String((digitalRead(WATER_SPRINKLER) == LOW) ? "ON" : "OFF");
 
   data["IpAddress"] = WiFi.localIP().toString();
 
@@ -194,8 +195,8 @@ void checkCurrentStatus(bool sendLineNotify) {
   if (sendLineNotify) {
     //Send to Line Notify
     String status = "\r\nRelay Switch Status";
-    status += "\r\nWaterfall Pump: " + String((digitalRead(SW1) == LOW) ? "เปิด" : "ปิด");
-    status += "\r\nWater Sprinkler: " + String((digitalRead(SW2) == LOW) ? "เปิด" : "ปิด");
+    status += "\r\nWaterfall Pump: " + String((digitalRead(WATER_FALL_PUMP) == LOW) ? "เปิด" : "ปิด");
+    status += "\r\nWater Sprinkler: " + String((digitalRead(WATER_SPRINKLER) == LOW) ? "เปิด" : "ปิด");
     Line_Notify(status);
   }
 }
@@ -278,8 +279,8 @@ void handleRoot() {
   cmd += "<meta http-equiv='refresh' content='5'/>";
   cmd += "</head>";
 
-  cmd += "<br/>Waterfall Pump  : " + String((digitalRead(SW1) == LOW) ? "ON" : "OFF");
-  cmd += "<br/>Water Sprinkler  : " + String((digitalRead(SW2) == LOW) ? "ON" : "OFF");
+  cmd += "<br/>Waterfall Pump  : " + String((digitalRead(WATER_FALL_PUMP) == LOW) ? "ON" : "OFF");
+  cmd += "<br/>Water Sprinkler  : " + String((digitalRead(WATER_SPRINKLER) == LOW) ? "ON" : "OFF");
 
   cmd += "<html>\r\n";
   server.send(200, "text/html", cmd);
@@ -287,24 +288,24 @@ void handleRoot() {
 
 void handleRelaySwitch() {
 
-  pinMode(SW1, OUTPUT); digitalWrite(SW1, HIGH);
-  pinMode(SW2, OUTPUT); digitalWrite(SW2, HIGH);
+  pinMode(WATER_FALL_PUMP, OUTPUT); digitalWrite(WATER_FALL_PUMP, HIGH);
+  pinMode(WATER_SPRINKLER, OUTPUT); digitalWrite(WATER_SPRINKLER, HIGH);
 
   server.on("/", handleRoot);
-  server.on("/sw1=1", []() {
-    server.send(200, "text/plain", "SW1 = ON"); digitalWrite(SW1, LOW);
+  server.on("/WATER_FALL_PUMP=1", []() {
+    server.send(200, "text/plain", "WATER_FALL_PUMP = ON"); digitalWrite(WATER_FALL_PUMP, LOW);
   });
 
-  server.on("/sw1=0", []() {
-    server.send(200, "text/plain", "SW1 = OFF"); digitalWrite(SW1, HIGH);
+  server.on("/WATER_FALL_PUMP=0", []() {
+    server.send(200, "text/plain", "WATER_FALL_PUMP = OFF"); digitalWrite(WATER_FALL_PUMP, HIGH);
   });
 
-  server.on("/sw2=1", []() {
-    server.send(200, "text/plain", "SW2 = ON"); digitalWrite(SW2, LOW);
+  server.on("/WATER_SPRINKLER=1", []() {
+    server.send(200, "text/plain", "WATER_SPRINKLER = ON"); digitalWrite(WATER_SPRINKLER, LOW);
   });
 
-  server.on("/sw2=0", []() {
-    server.send(200, "text/plain", "SW2 = OFF"); digitalWrite(SW2, HIGH);
+  server.on("/WATER_SPRINKLER=0", []() {
+    server.send(200, "text/plain", "WATER_SPRINKLER = OFF"); digitalWrite(WATER_SPRINKLER, HIGH);
   });
 
   server.onNotFound(handleNotFound);

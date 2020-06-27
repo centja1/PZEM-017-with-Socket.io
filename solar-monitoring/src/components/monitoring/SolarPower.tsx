@@ -22,7 +22,7 @@ import Blik from '../common/Blik';
 import CircularChart from './CircularChart';
 import { ReduceMessage, ReduceData } from '../../utils/ReduceMessage';
 import { RangePercentage, RangNumber } from '../../utils/RangePercentage';
-import { AppConfig } from '../../constants/Constants';
+import { AppConfig, RelaySwitch } from '../../constants/Constants';
 import { ChartModel } from '../../typings/chartModel';
 import { LogData } from '../../typings/logData';
 import { powerData } from '../../typings/powerData';
@@ -60,16 +60,12 @@ export default (props: SolarPowerProps): ReactElement => {
   const [deviceIpAddress, setDeviceIpAddress] = useState('');
   const [inverterSwitch, setInverterSwitch] = useState(false);
   const [coolingFans, setCoolingFans] = useState(false);
-  const [waterfallPumpSwitch, setWaterfallPumpSwitch] = useState(false);
-  const [waterSprinkler, setWaterSprinkler] = useState(false);
+  const [lightSwitch, setLightSwitch] = useState(false);
+  const [spotLight, setSpotlight] = useState(false);
   const [disableBtnInverterSw, setDisableBtnInverterSw] = useState(false);
   const [disableBtnCoolingFansSw, setDisableBtnCoolingFansSw] = useState(false);
-  const [disableBtnWaterfallPumpSw, setDisableBtnWaterfallPumpSw] = useState(
-    false
-  );
-  const [disableBtnWaterSprinklerSw, setDisableBtnWaterSprinklerSw] = useState(
-    false
-  );
+  const [disableBtnLightSw, setDisableBtnLightSw] = useState(false);
+  const [disableBtnSpotlightSw, setDisableBtnSpotlightSw] = useState(false);
 
   const [inverterVoltageStart, setInverterVoltageStart] = useState<number>(
     13.15
@@ -109,25 +105,25 @@ export default (props: SolarPowerProps): ReactElement => {
       } else if (data.deviceState) {
         const {
           IpAddress,
-          SW1,
-          SW2,
-          SW3,
-          SW4,
+          INVERTER,
+          COOLING_FAN,
+          LIGHT,
+          SPOTLIGHT,
           inverterVoltageShutdown,
           inverterVoltageStart,
         } = data.deviceState;
         setDeviceIpAddress(IpAddress);
-        setInverterSwitch(SW1 === 'ON');
-        setCoolingFans(SW2 === 'ON');
-        setWaterfallPumpSwitch(SW3 === 'ON');
-        setWaterSprinkler(SW4 === 'ON');
+        setInverterSwitch(INVERTER === 'ON');
+        setCoolingFans(COOLING_FAN === 'ON');
+        setLightSwitch(LIGHT === 'ON');
+        setSpotlight(SPOTLIGHT === 'ON');
         setInverterVoltageStart(inverterVoltageStart);
         setInverterVoltageShutdown(inverterVoltageShutdown);
 
         setDisableBtnInverterSw(false);
         setDisableBtnCoolingFansSw(false);
-        setDisableBtnWaterfallPumpSw(false);
-        setDisableBtnWaterSprinklerSw(false);
+        setDisableBtnLightSw(false);
+        setDisableBtnSpotlightSw(false);
       }
     };
     subscribeData(cb);
@@ -198,20 +194,32 @@ export default (props: SolarPowerProps): ReactElement => {
   const handleSwitch = (sw: number) => {
     switch (sw) {
       case 1:
-        broadcastData('SW1', !inverterSwitch ? 'state:on' : 'state:off');
+        broadcastData(
+          RelaySwitch.INVERTER,
+          !inverterSwitch ? 'state:on' : 'state:off'
+        );
         setDisableBtnInverterSw(true);
         break;
       case 2:
-        broadcastData('SW2', !coolingFans ? 'state:on' : 'state:off');
+        broadcastData(
+          RelaySwitch.COOLING_FAN,
+          !coolingFans ? 'state:on' : 'state:off'
+        );
         setDisableBtnCoolingFansSw(true);
         break;
       case 3:
-        broadcastData('SW3', !waterfallPumpSwitch ? 'state:on' : 'state:off');
-        setDisableBtnWaterfallPumpSw(true);
+        broadcastData(
+          RelaySwitch.LIGHT,
+          !lightSwitch ? 'state:on' : 'state:off'
+        );
+        setDisableBtnLightSw(true);
         break;
       case 4:
-        broadcastData('SW4', !waterSprinkler ? 'state:on' : 'state:off');
-        setDisableBtnWaterSprinklerSw(true);
+        broadcastData(
+          RelaySwitch.SPOTLIGHT,
+          !spotLight ? 'state:on' : 'state:off'
+        );
+        setDisableBtnSpotlightSw(true);
         break;
       default:
         break;
@@ -254,27 +262,27 @@ export default (props: SolarPowerProps): ReactElement => {
             </Button>
           </div>
           <div>
-            {/* {waterfallPumpSwitch ? "ON " : "OFF "}{" "} */}
+            {/* {lightSwitch ? "ON " : "OFF "}{" "} */}
             <Button
-              disabled={disableBtnWaterfallPumpSw}
+              disabled={disableBtnLightSw}
               onClick={() => handleSwitch(3)}
               color='info'
               style={{ margin: 5, width: 200, height: 50 }}
             >
-              Waterfall Pump <FontAwesomeIcon icon={faWater} size='lg' />
-              {Blik(waterfallPumpSwitch)}
+              LED Light <FontAwesomeIcon icon={faWater} size='lg' />
+              {Blik(lightSwitch)}
             </Button>
           </div>
           <div>
-            {/* {waterSprinkler ? "ON " : "OFF "} */}
+            {/* {spotLight ? "ON " : "OFF "} */}
             <Button
-              disabled={disableBtnWaterSprinklerSw}
+              disabled={disableBtnSpotlightSw}
               onClick={() => handleSwitch(4)}
               color='success'
               style={{ margin: 5, width: 200, height: 50 }}
             >
-              Water Sprinkler <FontAwesomeIcon icon={faShower} size='lg' />
-              {Blik(waterSprinkler)}
+              Spotlight <FontAwesomeIcon icon={faShower} size='lg' />
+              {Blik(spotLight)}
             </Button>
           </div>
           <br />

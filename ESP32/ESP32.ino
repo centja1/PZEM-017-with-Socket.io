@@ -107,10 +107,10 @@ extern String Rcontent;
 int DHTpin = 15;
 
 // Relay Switch
-int SW1 = 27;
-int SW2 = 26;
-int SW3 = 25;
-int SW4 = 33;
+int INVERTER = 27;
+int COOLING_FAN = 26;
+int LIGHT = 25;
+int SPOTLIGHT = 33;
 int SW5 = 32;
 
 //Indicates that the master needs to read 8 registers with slave address 0x01 and the start address of the register is 0x0000.
@@ -183,7 +183,7 @@ void loop() {
   energy_start = energy;
 
   oled.setTextXY(2, 1);
-  oled.putString("- S1:" + String((digitalRead(SW1) == LOW) ? "ON" : "OFF") + " S2:" + String((digitalRead(SW2) == LOW) ? "ON" : "OFF") + " S3:" + String((digitalRead(SW3) == LOW) ? "ON" : "OFF") + " -");
+  oled.putString("- S1:" + String((digitalRead(INVERTER) == LOW) ? "ON" : "OFF") + " S2:" + String((digitalRead(COOLING_FAN) == LOW) ? "ON" : "OFF") + " S3:" + String((digitalRead(LIGHT) == LOW) ? "ON" : "OFF") + " -");
 
   if (voltage > 3 && voltage < 300) {
     digitalWrite(LED_BUILTIN, HIGH);
@@ -195,11 +195,11 @@ void loop() {
     batteryStatusMessage += "ENERGY: " + String(energy_kWhtoday) + "WH";
 
     if ((voltage >= inverterVoltageStart && voltage <= hightVoltage) &&  !inverterStarted) {
-      actionCommand("SW1", "state:on", batteryStatusMessage, true, true);
+      actionCommand("INVERTER", "state:on", batteryStatusMessage, true, true);
     }
 
     if ((voltage < lowVoltage || voltage >= hightVoltage || voltage <= inverterVoltageShutdown) && inverterStarted) {
-      actionCommand("SW1", "state:off", batteryStatusMessage, true, true);
+      actionCommand("INVERTER", "state:off", batteryStatusMessage, true, true);
     }
 
     createResponse(voltage, current, power, energy_kWhtoday, over_power_alarm, lower_power_alarm, humidity, temperature, true);
@@ -226,20 +226,20 @@ void loop() {
   time_t now = time(nullptr);
   struct tm* p_tm = localtime(&now);
   if (p_tm->tm_hour == 15 && p_tm->tm_min == 0 && p_tm->tm_sec == 0) {
-    actionCommand("SW1", "state:off", "Invert หยุดทำงาน ที่เวลา 15:00", true, true);
+    actionCommand("INVERTER", "state:off", "Invert หยุดทำงาน ที่เวลา 15:00", true, true);
   }
 
   //Shutdown Inverter on 16:30
   if (p_tm->tm_hour == 16 && p_tm->tm_min == 30 && p_tm->tm_sec == 0) {
-    actionCommand("SW1", "state:off", "", true, false);
-    actionCommand("SW2", "state:off", " ", true, false);
+    actionCommand("INVERTER", "state:off", "", true, false);
+    actionCommand("COOLING_FAN", "state:off", " ", true, false);
   }
 
   //  Solar Fan Cooling Start
   if ((int)temperature > 0 && (int)temperature >= 42) {
     if (!solarboxFanStarted) {
       Serial.println("Fan Start");
-      actionCommand("SW2", "state:on", "Start SolarBox Fan", true, false);
+      actionCommand("COOLING_FAN", "state:on", "Start SolarBox Fan", true, false);
     }
   }
 
@@ -247,7 +247,7 @@ void loop() {
   if ((int)temperature > 0 && (int)temperature <= 38) {
     if (solarboxFanStarted) {
       Serial.println("Fan Stoped");
-      actionCommand("SW2", "state:off", "Stoped SolarBox Fan", true, false);
+      actionCommand("COOLING_FAN", "state:off", "Stoped SolarBox Fan", true, false);
     }
   }
 
@@ -455,26 +455,26 @@ void actionCommand(String action, String payload, String messageInfo, bool isAut
   if (action == "") return;
 
   String actionName = "";
-  if (action == "SW1") {
+  if (action == "INVERTER") {
     actionName = "TBE Inverter 4000w";
-    digitalWrite(SW1, (payload == "state:on") ? LOW : HIGH);
+    digitalWrite(INVERTER, (payload == "state:on") ? LOW : HIGH);
     inverterStarted = (payload == "state:on");
   }
 
-  if (action == "SW2") {
+  if (action == "COOLING_FAN") {
     actionName = "Cooling Fans";
-    digitalWrite(SW2, (payload == "state:on") ? LOW : HIGH);
+    digitalWrite(COOLING_FAN, (payload == "state:on") ? LOW : HIGH);
     solarboxFanStarted = (payload == "state:on");
   }
 
-  if (action == "SW3") {
+  if (action == "LIGHT") {
     actionName = "Waterfall Pump";
-    digitalWrite(SW3, (payload == "state:on") ? LOW : HIGH);
+    digitalWrite(LIGHT, (payload == "state:on") ? LOW : HIGH);
   }
 
-  if (action == "SW4") {
+  if (action == "SPOTLIGHT") {
     actionName = "Water Sprinkler";
-    digitalWrite(SW4, (payload == "state:on") ? LOW : HIGH);
+    digitalWrite(SPOTLIGHT, (payload == "state:on") ? LOW : HIGH);
   }
 
   if (action == "checking") {
@@ -516,10 +516,10 @@ void checkCurrentStatus(bool sendLineNotify) {
   //
   //  //For Display on UI with socket.io
   //  JsonObject object = doc.createNestedObject("deviceState");
-  //  object["SW1"] = String((digitalRead(SW1) == LOW) ? "ON" : "OFF");
-  //  object["SW2"] = String((digitalRead(SW2) == LOW) ? "ON" : "OFF");
-  //  object["SW3"] = String((digitalRead(SW3) == LOW) ? "ON" : "OFF");
-  //  object["SW4"] = String((digitalRead(SW4) == LOW) ? "ON" : "OFF");
+  //  object["INVERTER"] = String((digitalRead(INVERTER) == LOW) ? "ON" : "OFF");
+  //  object["COOLING_FAN"] = String((digitalRead(COOLING_FAN) == LOW) ? "ON" : "OFF");
+  //  object["LIGHT"] = String((digitalRead(LIGHT) == LOW) ? "ON" : "OFF");
+  //  object["SPOTLIGHT"] = String((digitalRead(SPOTLIGHT) == LOW) ? "ON" : "OFF");
   //  object["inverterVoltageStart"] = inverterVoltageStart;
   //  object["inverterVoltageShutdown"] = inverterVoltageShutdown;
   //  object["IpAddress"] = WiFi.localIP().toString();
@@ -533,10 +533,10 @@ void checkCurrentStatus(bool sendLineNotify) {
   root["lastUpdated"] = NowString();
 
   JsonObject& data = root.createNestedObject("deviceState");
-  data["SW1"] = String((digitalRead(SW1) == LOW) ? "ON" : "OFF");
-  data["SW2"] = String((digitalRead(SW2) == LOW) ? "ON" : "OFF");
-  data["SW3"] = String((digitalRead(SW3) == LOW) ? "ON" : "OFF");
-  data["SW4"] = String((digitalRead(SW4) == LOW) ? "ON" : "OFF");
+  data["INVERTER"] = String((digitalRead(INVERTER) == LOW) ? "ON" : "OFF");
+  data["COOLING_FAN"] = String((digitalRead(COOLING_FAN) == LOW) ? "ON" : "OFF");
+  data["LIGHT"] = String((digitalRead(LIGHT) == LOW) ? "ON" : "OFF");
+  data["SPOTLIGHT"] = String((digitalRead(SPOTLIGHT) == LOW) ? "ON" : "OFF");
   data["inverterVoltageStart"] = inverterVoltageStart;
   data["inverterVoltageShutdown"] = inverterVoltageShutdown;
   data["IpAddress"] = WiFi.localIP().toString();
@@ -550,10 +550,10 @@ void checkCurrentStatus(bool sendLineNotify) {
   if (sendLineNotify) {
     //Send to Line Notify
     String status = "\r\nRelay Switch Status";
-    status += "\r\nTBE Inverter 4000w: " + String((digitalRead(SW1) == LOW) ? "เปิด" : "ปิด");
-    status += "\r\nCooling Fans: " + String((digitalRead(SW2) == LOW) ? "เปิด" : "ปิด");
-    status += "\r\nWaterfall Pump: " + String((digitalRead(SW3) == LOW) ? "เปิด" : "ปิด");
-    status += "\r\nWater Sprinkler: " + String((digitalRead(SW4) == LOW) ? "เปิด" : "ปิด");
+    status += "\r\nTBE Inverter 4000w: " + String((digitalRead(INVERTER) == LOW) ? "เปิด" : "ปิด");
+    status += "\r\nCooling Fans: " + String((digitalRead(COOLING_FAN) == LOW) ? "เปิด" : "ปิด");
+    status += "\r\nWaterfall Pump: " + String((digitalRead(LIGHT) == LOW) ? "เปิด" : "ปิด");
+    status += "\r\nWater Sprinkler: " + String((digitalRead(SPOTLIGHT) == LOW) ? "เปิด" : "ปิด");
     Line_Notify(status);
   }
 }
@@ -663,10 +663,10 @@ void setUpFireBase() {
 }
 
 void handleRelaySwitch() {
-  pinMode(SW1, OUTPUT); digitalWrite(SW1, HIGH);
-  pinMode(SW2, OUTPUT); digitalWrite(SW2, HIGH);
-  pinMode(SW3, OUTPUT); digitalWrite(SW3, HIGH);
-  pinMode(SW4, OUTPUT); digitalWrite(SW4, HIGH);
+  pinMode(INVERTER, OUTPUT); digitalWrite(INVERTER, HIGH);
+  pinMode(COOLING_FAN, OUTPUT); digitalWrite(COOLING_FAN, HIGH);
+  pinMode(LIGHT, OUTPUT); digitalWrite(LIGHT, HIGH);
+  pinMode(SPOTLIGHT, OUTPUT); digitalWrite(SPOTLIGHT, HIGH);
   pinMode(SW5, OUTPUT); digitalWrite(SW5, HIGH);
 }
 
