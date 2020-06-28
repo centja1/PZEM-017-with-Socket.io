@@ -1,14 +1,16 @@
 import React, { ReactElement, useState } from 'react';
 import { NavLink, TabContent, TabPane, Nav, NavItem } from 'reactstrap';
 import classnames from 'classnames';
-import './monitering.css';
 import SolarPower from './SolarPower';
 import SoiMoisture from './SoiMoisture';
+import { Storage } from '../../utils/Storage';
+import './monitering.css';
 
 export default (): ReactElement => {
-  const [activeTab, setActiveTab] = useState('1');
+  const [activeTab, setActiveTab] = useState(Storage.getActiveTab());
 
   const toggle = (tab: any) => {
+    Storage.setActiveTab(tab);
     if (activeTab !== tab) setActiveTab(tab);
   };
 

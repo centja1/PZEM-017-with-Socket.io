@@ -2,12 +2,12 @@ import React, { ReactElement, useState, useEffect } from 'react';
 import { Container, Row, Col, Button } from 'reactstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faShower,
-  faWater,
   faBroadcastTower,
   faCheckCircle,
   faSyncAlt,
   faFan,
+  faLightbulb,
+  faBolt,
 } from '@fortawesome/free-solid-svg-icons';
 
 //init module
@@ -269,7 +269,7 @@ export default (props: SolarPowerProps): ReactElement => {
               color='info'
               style={{ margin: 5, width: 200, height: 50 }}
             >
-              LED Light <FontAwesomeIcon icon={faWater} size='lg' />
+              LED Light <FontAwesomeIcon icon={faLightbulb} size='lg' />
               {Blik(lightSwitch)}
             </Button>
           </div>
@@ -281,7 +281,7 @@ export default (props: SolarPowerProps): ReactElement => {
               color='success'
               style={{ margin: 5, width: 200, height: 50 }}
             >
-              Spotlight <FontAwesomeIcon icon={faShower} size='lg' />
+              Spotlight <FontAwesomeIcon icon={faBolt} size='lg' />
               {Blik(spotLight)}
             </Button>
           </div>

@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Button } from 'reactstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faShower,
   faWater,
   faCheckCircle,
   faSyncAlt,
+  faTint,
 } from '@fortawesome/free-solid-svg-icons';
 
 //init module
@@ -170,13 +170,13 @@ const SoiMoisture = (props: SoiMoistureProps) => {
               color='success'
               style={{ margin: 5, width: 200, height: 50 }}
             >
-              Water Sprinkler <FontAwesomeIcon icon={faShower} size='lg' />
+              Water Sprinkler <FontAwesomeIcon icon={faTint} size='lg' />
               {Blik(waterSprinkler)}
             </Button>
           </div>
           <br />
           <div style={{ color: 'white' }}>
-            <strong style={{ textAlign: 'center' }}>Moisture State</strong>
+            <strong style={{ textAlign: 'center' }}>Soil Moisture State</strong>
           </div>
           <div className='single-chart' style={{ color: 'white' }}>
             <svg viewBox='0 0 36 36' className='circular-chart green'>

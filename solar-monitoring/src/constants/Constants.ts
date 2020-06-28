@@ -12,4 +12,8 @@ const RelaySwitch = {
   WATER_SPRINKLER: 'WATER_SPRINKLER',
 };
 
-export { AppConfig, RelaySwitch };
+const LocalStorageConfig = {
+  defaultActiveTab: 'defaultActiveTab',
+};
+
+export { AppConfig, RelaySwitch, LocalStorageConfig };
