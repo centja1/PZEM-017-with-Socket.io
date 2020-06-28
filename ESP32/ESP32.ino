@@ -78,7 +78,7 @@ char ntp_server2[20] = "fw.eng.ku.ac.th";
 char ntp_server3[20] = "time.uni.net.th";
 int dst = 0;
 
-float inverterVoltageStart = 13.10;
+float inverterVoltageStart = 13.20;
 float inverterVoltageShutdown = 11.20;
 float hightVoltage = 13.80;
 float lowVoltage = 10.50;
@@ -468,12 +468,12 @@ void actionCommand(String action, String payload, String messageInfo, bool isAut
   }
 
   if (action == "LIGHT") {
-    actionName = "Waterfall Pump";
+    actionName = "Light LED";
     digitalWrite(LIGHT, (payload == "state:on") ? LOW : HIGH);
   }
 
   if (action == "SPOTLIGHT") {
-    actionName = "Water Sprinkler";
+    actionName = "Spotlight";
     digitalWrite(SPOTLIGHT, (payload == "state:on") ? LOW : HIGH);
   }
 
@@ -552,8 +552,8 @@ void checkCurrentStatus(bool sendLineNotify) {
     String status = "\r\nRelay Switch Status";
     status += "\r\nTBE Inverter 4000w: " + String((digitalRead(INVERTER) == LOW) ? "เปิด" : "ปิด");
     status += "\r\nCooling Fans: " + String((digitalRead(COOLING_FAN) == LOW) ? "เปิด" : "ปิด");
-    status += "\r\nWaterfall Pump: " + String((digitalRead(LIGHT) == LOW) ? "เปิด" : "ปิด");
-    status += "\r\nWater Sprinkler: " + String((digitalRead(SPOTLIGHT) == LOW) ? "เปิด" : "ปิด");
+    status += "\r\nLight LED: " + String((digitalRead(LIGHT) == LOW) ? "เปิด" : "ปิด");
+    status += "\r\nSpotlight: " + String((digitalRead(SPOTLIGHT) == LOW) ? "เปิด" : "ปิด");
     Line_Notify(status);
   }
 }
@@ -630,7 +630,7 @@ void Line_Notify(String message) {
   req += "Host: notify-api.line.me\r\n";
   req += "Authorization: Bearer " + String(LINE_TOKEN) + "\r\n";
   req += "Cache-Control: no-cache\r\n";
-  req += "User-Agent: ESP8266\r\n";
+  req += "User-Agent: ESP32\r\n";
   req += "Content-Type: application/x-www-form-urlencoded\r\n";
   req += "Content-Length: " + String(String("message=" + message).length()) + "\r\n";
   req += "\r\n";

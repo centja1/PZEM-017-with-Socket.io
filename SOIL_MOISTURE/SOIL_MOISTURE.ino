@@ -14,6 +14,7 @@
 
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
+#include <arduino-timer.h>
 #include <time.h>
 #include <WiFiClientSecureAxTLS.h>
 #include <ESP8266WebServer.h>
@@ -52,6 +53,11 @@ int ANALOG_PIN = A0;
 
 SocketIOClient socket;
 ESP8266WebServer server(80);
+
+auto timer = timer_create_default(); // create a timer with default settings
+Timer<> default_timer; // save as above
+Timer<1, micros> task1;
+Timer<1, micros> task2;
 
 void setup() {
 
@@ -101,7 +107,10 @@ void loop() {
     actionCommand("WATER_FALL_PUMP", "state:off", "Invert หยุดทำงาน ที่เวลา 15:00", true);
   }
 
-  delay(2000);
+  task1.tick();
+  task2.tick();
+
+  delay(1000);
   digitalWrite(LEDPIN, LOW);
 }
 
@@ -150,12 +159,21 @@ void actionCommand(String action, String payload, String messageInfo, bool isAut
   String actionName = "";
   if (action == "WATER_FALL_PUMP") {
     actionName = "Waterfall Pump";
-    digitalWrite(WATER_FALL_PUMP, (payload == "state:on") ? LOW : HIGH);
+    if (payload == "state:on") {
+      digitalWrite(WATER_FALL_PUMP, LOW);
+      task1.in(10000000, stopWaterFallPump);
+    } else
+      digitalWrite(WATER_FALL_PUMP, HIGH);
   }
 
   if (action == "WATER_SPRINKLER") {
     actionName = "Water Sprinkler";
-    digitalWrite(WATER_SPRINKLER, (payload == "state:on") ? LOW : HIGH);
+    if (payload == "state:on") {
+      digitalWrite(WATER_SPRINKLER, LOW);
+      task2.in(10000000, stopWaterSpringkler);
+    }
+    else
+      digitalWrite(WATER_SPRINKLER, HIGH);
   }
 
   if (action == "checking") {
@@ -172,6 +190,18 @@ void actionCommand(String action, String payload, String messageInfo, bool isAut
     Line_Notify(msq);
     Serial.println("[" + actionName + "]: " + relayStatus);
   }
+}
+
+bool stopWaterFallPump(void *) {
+  digitalWrite(WATER_FALL_PUMP, HIGH);
+  checkCurrentStatus(true);
+  return true; // repeat? true
+}
+
+bool stopWaterSpringkler(void *) {
+  digitalWrite(WATER_SPRINKLER, HIGH);
+  checkCurrentStatus(true);
+  return true; // repeat? true
 }
 
 void checkCurrentStatus(bool sendLineNotify) {
