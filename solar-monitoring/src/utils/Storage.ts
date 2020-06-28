@@ -3,10 +3,12 @@ import { LocalStorageConfig } from '../constants/Constants';
 const Storage = {
   getActiveTab() {
     return localStorage.getItem(LocalStorageConfig.defaultActiveTab)
-      ? JSON.parse(localStorage.getItem(LocalStorageConfig.defaultActiveTab))
+      ? JSON.parse(
+          localStorage.getItem(LocalStorageConfig.defaultActiveTab) ?? '1'
+        )
       : [];
   },
-  setActiveTab(currentTab) {
+  setActiveTab(currentTab: string) {
     localStorage.setItem(
       LocalStorageConfig.defaultActiveTab,
       JSON.stringify(currentTab)
