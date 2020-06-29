@@ -34,6 +34,16 @@ const SoiMoisture = (props: SoiMoistureProps) => {
       color: 'hsl(157, 70%, 50%)',
       data: [],
     },
+    {
+      id: 'temperature (C)',
+      color: 'hsl(226, 70%, 50%)',
+      data: [],
+    },
+    {
+      id: 'humidity (H %)',
+      color: 'hsl(298, 70%, 50%)',
+      data: [],
+    },
   ]);
 
   const [deviceData, setDeviceData] = useState<any>([]);
@@ -115,9 +125,36 @@ const SoiMoisture = (props: SoiMoistureProps) => {
         },
       ];
     }
+
+    if (temperature) {
+      const temperatureIndex = 1;
+      //setPercentageMoisture(RangePercentage(deviceData.moisture, 0, 1000, 100));
+      ReduceData(maxArr, chartData[temperatureIndex].data);
+      chartData[temperatureIndex].data = [
+        ...chartData[temperatureIndex].data,
+        {
+          x: moment.utc().format(AppConfig.dateFormat),
+          y: temperature,
+        },
+      ];
+    }
+
+    if (humidity) {
+      const humidityIndex = 2;
+      //setPercentageMoisture(RangePercentage(deviceData.moisture, 0, 1000, 100));
+      ReduceData(maxArr, chartData[humidityIndex].data);
+      chartData[humidityIndex].data = [
+        ...chartData[humidityIndex].data,
+        {
+          x: moment.utc().format(AppConfig.dateFormat),
+          y: humidity,
+        },
+      ];
+    }
+
     setSoilMoistureData(chartData);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deviceData]);
+  }, [deviceData, temperature, humidity]);
 
   const handleSwitch = (sw: number) => {
     switch (sw) {
@@ -239,7 +276,7 @@ const SoiMoisture = (props: SoiMoistureProps) => {
                 <DailyChart
                   data={soilMoistureData}
                   title='Soil Moisture Monitoring'
-                  legend='Moisture'
+                  legend='Sensor data'
                   colors='category10'
                   isDecimalFormat={false}
                 />

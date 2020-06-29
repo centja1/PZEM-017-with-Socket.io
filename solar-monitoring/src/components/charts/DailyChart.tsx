@@ -125,7 +125,7 @@ const DailyChart = (props: DailyChartProps): ReactElement => {
             translateY: 0,
             itemsSpacing: 0,
             itemDirection: 'left-to-right',
-            itemWidth: 80,
+            itemWidth: 87,
             itemHeight: 20,
             itemOpacity: 0.75,
             symbolSize: 12,

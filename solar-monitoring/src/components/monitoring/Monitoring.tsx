@@ -7,7 +7,7 @@ import { Storage } from '../../utils/Storage';
 import './monitering.css';
 
 export default (): ReactElement => {
-  const [activeTab, setActiveTab] = useState(Storage.getActiveTab() ?? '1');
+  const [activeTab, setActiveTab] = useState(Storage.getActiveTab());
 
   const toggle = (tab: any) => {
     Storage.setActiveTab(tab);
