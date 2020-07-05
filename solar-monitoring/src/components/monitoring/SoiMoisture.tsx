@@ -159,17 +159,16 @@ const SoiMoisture = (props: SoiMoistureProps) => {
   const handleSwitch = (sw: number) => {
     switch (sw) {
       case 1:
-        broadcastData(
-          RelaySwitch.WATER_FALL_PUMP,
-          !waterfallPumpSwitch ? 'state:on' : 'state:off'
-        );
+        broadcastData(RelaySwitch.WATER_FALL_PUMP, {
+          state: !waterfallPumpSwitch ? 'state:on' : 'state:off',
+        });
         setDisableBtnWaterfallPumpSw(true);
         break;
       case 2:
-        broadcastData(
-          RelaySwitch.WATER_SPRINKLER,
-          !waterSprinkler ? 'state:on' : 'state:off'
-        );
+        broadcastData(RelaySwitch.WATER_SPRINKLER, {
+          state: !waterSprinkler ? 'state:on' : 'state:off',
+          delay: 10,
+        });
         setDisableBtnWaterSprinklerSw(true);
         break;
       default:

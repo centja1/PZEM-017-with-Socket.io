@@ -194,31 +194,27 @@ export default (props: SolarPowerProps): ReactElement => {
   const handleSwitch = (sw: number) => {
     switch (sw) {
       case 1:
-        broadcastData(
-          RelaySwitch.INVERTER,
-          !inverterSwitch ? 'state:on' : 'state:off'
-        );
+        broadcastData(RelaySwitch.INVERTER, {
+          state: !inverterSwitch ? 'state:on' : 'state:off',
+        });
         setDisableBtnInverterSw(true);
         break;
       case 2:
-        broadcastData(
-          RelaySwitch.COOLING_FAN,
-          !coolingFans ? 'state:on' : 'state:off'
-        );
+        broadcastData(RelaySwitch.COOLING_FAN, {
+          state: !coolingFans ? 'state:on' : 'state:off',
+        });
         setDisableBtnCoolingFansSw(true);
         break;
       case 3:
-        broadcastData(
-          RelaySwitch.LIGHT,
-          !lightSwitch ? 'state:on' : 'state:off'
-        );
+        broadcastData(RelaySwitch.LIGHT, {
+          state: !lightSwitch ? 'state:on' : 'state:off',
+        });
         setDisableBtnLightSw(true);
         break;
       case 4:
-        broadcastData(
-          RelaySwitch.SPOTLIGHT,
-          !spotLight ? 'state:on' : 'state:off'
-        );
+        broadcastData(RelaySwitch.SPOTLIGHT, {
+          state: !spotLight ? 'state:on' : 'state:off',
+        });
         setDisableBtnSpotlightSw(true);
         break;
       default:
