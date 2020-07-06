@@ -43,12 +43,13 @@
 
 #include <Arduino.h>
 #include <time.h>
-#include<WiFi.h>
+#include <WiFi.h>
 #include <WiFiClientSecure.h>
+#include <arduino-timer.h>
 #include "FirebaseESP32.h"
 #include <HardwareSerial.h>
 #include "PZEM017.h"
-#include <SocketIOClient.h>
+#include <SocketIoClient.h>
 #include <ArduinoJson.h>
 #include <string.h>
 #include <cstdlib>
@@ -71,6 +72,9 @@
 #define FIREBASE_HOST "xxxxxxxxxxxxx.firebaseio.com"
 #define FIREBASE_AUTH "____FIREBASE_KEY____"
 
+#define INTERVAL_MESSAGE1 500
+unsigned long time_1 = 0;
+
 // Config time
 int timezone = 7;
 char ntp_server1[20] = "ntp.ku.ac.th";
@@ -78,7 +82,7 @@ char ntp_server2[20] = "fw.eng.ku.ac.th";
 char ntp_server3[20] = "time.uni.net.th";
 int dst = 0;
 
-float inverterVoltageStart = 13.20;
+float inverterVoltageStart = 13.30;
 float inverterVoltageShutdown = 11.20;
 float hightVoltage = 13.80;
 float lowVoltage = 10.50;
@@ -87,13 +91,8 @@ bool isDebugMode = true;
 bool enableLineNotify = true;
 bool enableSocketIO = true;
 
-WiFiServer server(80);
-
-SocketIOClient socket;
+SocketIoClient webSocket;
 FirebaseData firebaseData;
-extern String RID;
-extern String Rname;
-extern String Rcontent;
 
 // OLED
 // 21 SDA
@@ -107,10 +106,10 @@ extern String Rcontent;
 int DHTpin = 15;
 
 // Relay Switch
-int INVERTER = 27;
-int COOLING_FAN = 26;
-int LIGHT = 25;
-int SPOTLIGHT = 33;
+int SPOTLIGHT = 27;
+int LIGHT = 26;
+int INVERTER  = 25;
+int COOLING_FAN = 33;
 int SW5 = 32;
 
 //Indicates that the master needs to read 8 registers with slave address 0x01 and the start address of the register is 0x0000.
@@ -119,6 +118,9 @@ static uint8_t pzemSlaveAddr = 0x01; // PZEM default address
 //Make sure RX (16) & TX (17) is connected jumper
 PZEM017 pzem(&Serial2, pzemSlaveAddr, 9600);
 DHTesp dht;
+
+auto timer = timer_create_default(); // create a timer with default settings
+Timer<> default_timer; // save as above
 
 void setup() {
   // OLED Display
@@ -134,16 +136,15 @@ void setup() {
 
   dht.setup(DHTpin, DHTesp::DHT11); //for DHT11 Connect DHT sensor to GPIO 15
   pinMode(LED_BUILTIN, OUTPUT);
-  if (!socket.connect(SOCKETIO_HOST, SOCKETIO_PORT)) {
-    Serial.println("connection failed");
-  }
-  if (socket.connected()) {
-    socket.send("connection", "message", "Connected !!!!");
-  }
 
   setupTimeZone();
   setUpFireBase();
   handleRelaySwitch();
+
+  webSocket.begin(SOCKETIO_HOST, SOCKETIO_PORT);
+  webSocket.on("ESP", event);
+
+  timer.every(2000, readPzemSensor);
 }
 
 bool inverterStarted = false;
@@ -151,14 +152,44 @@ bool solarboxFanStarted = false;
 String batteryStatusMessage;
 float energy_kWhtoday = 0;
 float energy_start = 0;
-void loop() {
 
-  if (!socket.connected()) {
-    socket.connect(SOCKETIO_HOST, SOCKETIO_PORT);
-    Serial.println("Socket.io reconnecting...");
-    delay(2000);
+void loop() {
+  unsigned long currentMillis = millis();
+
+  //Shutdown Inverter on 15:00
+  time_t now = time(nullptr);
+  struct tm* p_tm = localtime(&now);
+  if (p_tm->tm_hour == 15 && p_tm->tm_min == 0 && p_tm->tm_sec == 0) {
+    if (currentMillis - time_1 >= INTERVAL_MESSAGE1) {
+      time_1 = currentMillis;
+      actionCommand("INVERTER", "state:off", "Invert หยุดทำงาน ที่เวลา 15:00", true, true);
+    }
   }
 
+  //Shutdown Inverter on 16:30
+  if (p_tm->tm_hour == 16 && p_tm->tm_min == 30 && p_tm->tm_sec == 0) {
+    if (currentMillis - time_1 >= INTERVAL_MESSAGE1) {
+      time_1 = currentMillis;
+      actionCommand("INVERTER", "state:off", "", true, false);
+      actionCommand("COOLING_FAN", "state:off", " ", true, false);
+    }
+  }
+
+  // Reset FirebaseData per day
+  if (p_tm->tm_hour == 23 && p_tm->tm_min == 59)   {
+    if (Firebase.deleteNode(firebaseData, "/data")) {
+      Serial.print("delete /data failed:");
+      Serial.println("Firebase Error: " + firebaseData.errorReason());
+      // reset energy every day
+      pzem.resetEnergy();
+    }
+  }
+
+  webSocket.loop();
+  timer.tick();
+}
+
+bool readPzemSensor(void *) {
   if (isDebugMode)
     pzem.getSlaveParameters();
 
@@ -187,7 +218,7 @@ void loop() {
 
   if (voltage > 3 && voltage < 300) {
     digitalWrite(LED_BUILTIN, HIGH);
-    //Build Messages For Line Notify
+    // Build Messages For Line Notify
     batteryStatusMessage = "\r\n===============\r\n - Battery Status - \r\n";
     batteryStatusMessage += "VOLTAGE: " + String(voltage) + "V\r\n";
     batteryStatusMessage += "CURRENT: " + String(current) + "A\r\n";
@@ -203,36 +234,11 @@ void loop() {
     }
 
     createResponse(voltage, current, power, energy_kWhtoday, over_power_alarm, lower_power_alarm, humidity, temperature, true);
-
   } else {
     clearDisplay();
     printMessage(4, 1, "ERROR !!", false);
     printMessage(5, 1, "Failed to read modbus", true);
     createResponse(0, 0, 0, 0, 0, 0, humidity, temperature, false);
-  }
-
-  if (!socket.connected()) {
-    socket.connect(SOCKETIO_HOST, SOCKETIO_PORT);
-    clearDisplay();
-    printMessage(4, 1, "Socket.io reconnecting...", false);
-    delay(2000);
-  }
-
-  if (socket.monitor() && RID == SocketIoChannel && socket.connected()) {
-    actionCommand(Rname, Rcontent, "", false, true);
-  }
-
-  //Shutdown Inverter on 15:00
-  time_t now = time(nullptr);
-  struct tm* p_tm = localtime(&now);
-  if (p_tm->tm_hour == 15 && p_tm->tm_min == 0 && p_tm->tm_sec == 0) {
-    actionCommand("INVERTER", "state:off", "Invert หยุดทำงาน ที่เวลา 15:00", true, true);
-  }
-
-  //Shutdown Inverter on 16:30
-  if (p_tm->tm_hour == 16 && p_tm->tm_min == 30 && p_tm->tm_sec == 0) {
-    actionCommand("INVERTER", "state:off", "", true, false);
-    actionCommand("COOLING_FAN", "state:off", " ", true, false);
   }
 
   //  Solar Fan Cooling Start
@@ -251,24 +257,79 @@ void loop() {
     }
   }
 
-  // Reset FirebaseData per day
-  if (p_tm->tm_hour == 23 && p_tm->tm_min == 59)   {
-    if (Firebase.deleteNode(firebaseData, "/data")) {
-      Serial.print("delete /data failed:");
-      Serial.println("Firebase Error: " + firebaseData.errorReason());
-      // reset energy every day
+  digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+  return true; // repeat? true
+}
+
+void event(const char * payload, size_t length) {
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& root = jsonBuffer.parseObject(String(payload));
+  String action = root["action"];
+  if (action != "") {
+    Serial.printf("=====>: %s\n", payload);
+    String state = root["payload"]["state"];
+    String messageInfo = root["payload"]["messageInfo"];
+    bool isAuto = root["payload"]["isAuto"];
+
+    String actionName = "";
+    if (action == "INVERTER") {
+      actionName = "TBE Inverter 4000w";
+      digitalWrite(INVERTER, (state == "state:on") ? LOW : HIGH);
+      inverterStarted = (state == "state:on");
+    }
+
+    if (action == "COOLING_FAN") {
+      actionName = "Cooling Fans";
+      digitalWrite(COOLING_FAN, (state == "state:on") ? LOW : HIGH);
+      solarboxFanStarted = (state == "state:on");
+    }
+
+    if (action == "LIGHT") {
+      actionName = "Light LED";
+      digitalWrite(LIGHT, (state == "state:on") ? LOW : HIGH);
+    }
+
+    if (action == "SPOTLIGHT") {
+      actionName = "Spotlight";
+      digitalWrite(SPOTLIGHT, (state == "state:on") ? LOW : HIGH);
+    }
+
+    if (action == "checking") {
+      checkCurrentStatus(false);
+    }
+
+    if (action == "setInverterVoltageStart" && state != "") {
+      inverterVoltageStart = state.toFloat();
+    }
+
+    if (action == "setInverterVoltageShutdown" && state != "") {
+      inverterVoltageShutdown = state.toFloat();
+    }
+
+    if (action == "resetEnergy") {
       pzem.resetEnergy();
     }
-  }
 
-  delay(2000);
-  digitalWrite(LED_BUILTIN, LOW);
+    if (actionName != "") {
+      checkCurrentStatus(true);
+
+      String relayStatus = String((state == "state:on") ? "เปิด" : "ปิด");
+      String msq = (messageInfo != "") ? messageInfo : "";
+      msq += "\r\n===============\r\n- Relay Switch Status -\r\n" + actionName + ": " + relayStatus;
+      msq += (isAuto) ? " (Auto)" : " (Manual)";
+      if (enableLineNotify)
+        Line_Notify(msq);
+
+      if (isDebugMode)
+        Serial.println("[" + actionName + "]: " + relayStatus);
+    }
+  }
 }
 
 String createResponse(float voltage, float current, float power, float energy, uint16_t over_power_alarm, uint16_t lower_power_alarm, float humidity, float temperature, bool isOledPrint) {
   //For ArduinoJson 6.X
   //  StaticJsonDocument<1024> doc;
-  //  doc["data"] = "ESP8266";
+  //  doc["data"] = "ESP32";
   //  doc["last_Update"] = NowString();
   //  JsonObject object = doc.createNestedObject("sensor");
 
@@ -333,7 +394,7 @@ String createResponse(float voltage, float current, float power, float energy, u
 
   //Publish to socket.io server
   if (enableSocketIO)
-    socket.sendJSON(SocketIoChannel, output);
+    webSocket.emit(SocketIoChannel, output.c_str());
 
   if (isDebugMode)
     Serial.print(output);
@@ -353,101 +414,6 @@ void printMessage(int X, int Y, String message, bool isPrintLn) {
     Serial.println(message);
   else
     Serial.print(message);
-}
-
-String header;
-void httpServer() {
-  WiFiClient client = server.available();
-  if (client) {
-    Serial.println("New Client.");
-    String currentLine = "";
-    while (client.connected()) {
-      if (client.available()) {
-        char c = client.read();
-        Serial.write(c);
-        header += c;
-        if (c == '\n') {
-          // if the current line is blank, you got two newline characters in a row.
-          // that's the end of the client HTTP request, so send a response:
-          if (currentLine.length() == 0) {
-            // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
-            // and a content-type so the client knows what's coming, then a blank line:
-            client.println("HTTP/1.1 200 OK");
-            client.println("Content-type:text/html");
-            client.println("Connection: close");
-            client.println();
-
-            // turns the GPIOs on and off
-            if (header.indexOf("GET /26/on") >= 0) {
-              Serial.println("GPIO 26 on");
-              //output26State = "on";
-              // digitalWrite(output26, HIGH);
-            } else if (header.indexOf("GET /26/off") >= 0) {
-              Serial.println("GPIO 26 off");
-              // output26State = "off";
-              // digitalWrite(output26, LOW);
-            } else if (header.indexOf("GET /27/on") >= 0) {
-              //Serial.println("GPIO 27 on");
-              // output27State = "on";
-              //digitalWrite(output27, HIGH);
-            } else if (header.indexOf("GET /27/off") >= 0) {
-              Serial.println("GPIO 27 off");
-              // output27State = "off";
-              // digitalWrite(output27, LOW);
-            }
-
-            // Display the HTML web page
-            client.println("<!DOCTYPE html><html>");
-            client.println("<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
-            client.println("<link rel=\"icon\" href=\"data:,\">");
-            // CSS to style the on/off buttons
-            // Feel free to change the background-color and font-size attributes to fit your preferences
-            client.println("<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}");
-            client.println(".button { background-color: #4CAF50; border: none; color: white; padding: 16px 40px;");
-            client.println("text-decoration: none; font-size: 30px; margin: 2px; cursor: pointer;}");
-            client.println(".button2 {background-color: #555555;}</style></head>");
-
-            // Web Page Heading
-            client.println("<body><h1>ESP32 Web Server</h1>");
-
-            // Display current state, and ON/OFF buttons for GPIO 26
-            //client.println("<p>GPIO 26 - State " + output26State + "</p>");
-            client.println("<p>GPIO 26 - State xxxxxxxxx</p>");
-            // If the output26State is off, it displays the ON button
-            // if (output26State == "off") {
-            //   client.println("<p><a href=\"/26/on\"><button class=\"button\">ON</button></a></p>");
-            //  } else {
-            //   client.println("<p><a href=\"/26/off\"><button class=\"button button2\">OFF</button></a></p>");
-            // }
-
-            // Display current state, and ON/OFF buttons for GPIO 27
-            //client.println("<p>GPIO 27 - State " + output27State + "</p>");
-            // If the output27State is off, it displays the ON button
-            // if (output27State == "off") {
-            //   client.println("<p><a href=\"/27/on\"><button class=\"button\">ON</button></a></p>");
-            // } else {
-            //   client.println("<p><a href=\"/27/off\"><button class=\"button button2\">OFF</button></a></p>");
-            // }
-            client.println("</body></html>");
-
-            // The HTTP response ends with another blank line
-            client.println();
-            break;
-          } else {
-            currentLine = "";
-          }
-        } else if (c != '\r') {
-          currentLine += c;
-        }
-      }
-    }
-    // Clear the header variable
-    header = "";
-    // Close the connection
-    client.stop();
-    Serial.println("Client disconnected.");
-    Serial.println("");
-  }
 }
 
 void actionCommand(String action, String payload, String messageInfo, bool isAuto, bool isSendNotify) {
@@ -545,7 +511,7 @@ void checkCurrentStatus(bool sendLineNotify) {
   root.prettyPrintTo(output);
 
   if (enableSocketIO)
-    socket.sendJSON(SocketIoChannel, output);
+    webSocket.emit(SocketIoChannel, output.c_str());
 
   if (sendLineNotify) {
     //Send to Line Notify

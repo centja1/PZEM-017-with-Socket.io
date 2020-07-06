@@ -17,11 +17,9 @@
 #include <arduino-timer.h>
 #include <time.h>
 #include <WiFiClientSecureAxTLS.h>
-#include <ESP8266WebServer.h>
-#include <SocketIOClient.h>
+#include <SocketIoClient.h>
 //Required 5.13.x becuase compatible with FirebaseArduino
 #include <ArduinoJson.h>
-#define USE_SERIAL Serial
 
 // config parameters
 #define deviceId "e50n2azq"
@@ -35,6 +33,9 @@
 // Line config
 #define LINE_TOKEN "__YOUR_LINE_TOKEN___"
 
+#define INTERVAL_MESSAGE1 500
+unsigned long time_1 = 0;
+
 // Config time
 int timezone = 7 * 3600; //For thailand timezone
 char ntp_server1[20] = "ntp.ku.ac.th";
@@ -42,76 +43,63 @@ char ntp_server2[20] = "fw.eng.ku.ac.th";
 char ntp_server3[20] = "time.uni.net.th";
 int dst = 0;
 
-extern String RID;
-extern String Rname;
-extern String Rcontent;
+bool isDebugMode = false;
+bool enableLineNotify = true;
+bool enableSocketIO = true;
+
 
 int WATER_FALL_PUMP = D1;
 int WATER_SPRINKLER = D2;
 int LEDPIN = 16;
 int ANALOG_PIN = A0;
 
-SocketIOClient socket;
-ESP8266WebServer server(80);
+SocketIoClient webSocket;
 
 auto timer = timer_create_default(); // create a timer with default settings
 Timer<> default_timer; // save as above
-Timer<1, micros> task1;
-Timer<1, micros> task2;
+Timer<1, millis> task1;
 
 void setup() {
 
-  USE_SERIAL.begin(115200); //For debug on cosole (PC)
+  Serial.begin(115200); //For debug on cosole (PC)
   pinMode(LEDPIN, OUTPUT);
+
+  pinMode(WATER_FALL_PUMP, OUTPUT); digitalWrite(WATER_FALL_PUMP, HIGH);
+  pinMode(WATER_SPRINKLER, OUTPUT); digitalWrite(WATER_SPRINKLER, HIGH);
 
   setup_Wifi();
 
-  if (!socket.connect(SOCKETIO_HOST, SOCKETIO_PORT)) {
-    Serial.println("connection failed");
-  }
-  if (socket.connected()) {
-    socket.send("connection", "message", "Connected !!!!");
-  }
-
   setupTimeZone();
 
-  handleRelaySwitch();
+  webSocket.begin(SOCKETIO_HOST, SOCKETIO_PORT);
+  webSocket.on("ESP", event);
+
+  timer.every(2000, readSoilMoistureSensor);
 }
 
-int moisVal = 0;
+
 void loop() {
-
-  //Web server
-  server.handleClient();
-
-  moisVal = analogRead(ANALOG_PIN);
-  digitalWrite(LEDPIN, HIGH);
-
-  if (moisVal > 0) {
-    createResponse(moisVal);
-  }
-
-  if (!socket.connected()) {
-    socket.connect(SOCKETIO_HOST, SOCKETIO_PORT);
-    printMessage("Socket.io reconnecting...", false);
-    delay(2000);
-  }
-
-  if (socket.monitor() && RID == SocketIoChannel && socket.connected()) {
-    actionCommand(Rname, Rcontent, "", false);
-  }
 
   time_t now = time(nullptr);
   struct tm* p_tm = localtime(&now);
   if (p_tm->tm_hour == 18 && p_tm->tm_min == 0 && p_tm->tm_sec == 0) {
-    actionCommand("WATER_FALL_PUMP", "state:off", "Invert หยุดทำงาน ที่เวลา 15:00", true);
+    actionCommand("WATER_SPRINKLER", "state:off", "Water Sprinkler หยุดทำงาน ที่เวลา 18:00", true);
   }
 
+  webSocket.loop();
   task1.tick();
-  task2.tick();
+  timer.tick();
+}
 
-  delay(1000);
-  digitalWrite(LEDPIN, LOW);
+int moisVal = 0;
+bool readSoilMoistureSensor(void *) {
+  moisVal = analogRead(ANALOG_PIN);
+  if (moisVal > 0) {
+    createResponse(moisVal);
+  }
+
+  digitalWrite(LEDPIN, !digitalRead(LEDPIN));
+  return true; // repeat? true
 }
 
 String createResponse(float value) {
@@ -124,10 +112,8 @@ String createResponse(float value) {
 
   JsonObject& data = root.createNestedObject("sensor");
   data["moisture"] = value;
-  //data["current_usage"] = current_usage;
 
-
-  if (value > 0) {
+  if (value > 30) {
     if (moisVal >= 1000) {
       printMessage("Sensor is not in the Soil or DISCONNECTED", true);
     }
@@ -148,54 +134,88 @@ String createResponse(float value) {
   String output;
   root.prettyPrintTo(output);
 
-  socket.sendJSON(SocketIoChannel, output);
-  USE_SERIAL.print(output);
+  //Publish to socket.io server
+  if (enableSocketIO)
+    webSocket.emit(SocketIoChannel, output.c_str());
+
+  if (isDebugMode)
+    Serial.print(output);
 }
 
-void actionCommand(String action, String payload, String messageInfo, bool isAuto) {
-  Serial.println("State => " + String(action) + " : " +  String(payload));
-  if (action == "") return;
 
-  String actionName = "";
-  if (action == "WATER_FALL_PUMP") {
-    actionName = "Waterfall Pump";
-    if (payload == "state:on") {
-      digitalWrite(WATER_FALL_PUMP, LOW);
-      task1.in(10000000, stopWaterFallPump);
-    } else
-      digitalWrite(WATER_FALL_PUMP, HIGH);
+void event(const char * payload, size_t length) {
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& root = jsonBuffer.parseObject(String(payload));
+  String action = root["action"];
+  if (action != "") {
+    Serial.printf("=====>: %s\n", payload);
+    int delayTime = root["payload"]["delay"];
+    String state = root["payload"]["state"];
+    String messageInfo = root["payload"]["messageInfo"];
+    bool isAuto = root["payload"]["isAuto"];
+
+    String actionName = "";
+    if (action == "WATER_FALL_PUMP") {
+      actionName = "Waterfall Pump";
+      if (state == "state:on") {
+        digitalWrite(WATER_FALL_PUMP, LOW);
+      } else {
+        digitalWrite(WATER_FALL_PUMP, HIGH);
+      }
+    }
+
+    if (action == "WATER_SPRINKLER") {
+      actionName = "Water Sprinkler";
+      if (state == "state:on") {
+        digitalWrite(WATER_SPRINKLER, LOW);
+        task1.in(1000 * delayTime, stopWaterSpringkler);
+      }
+      else {
+        digitalWrite(WATER_SPRINKLER, HIGH);
+      }
+    }
+
+    if (action == "checking") {
+      checkCurrentStatus(false);
+    }
+
+    if (actionName != "") {
+      checkCurrentStatus(true);
+
+      String relayStatus = String((state == "state:on") ? "เปิด" : "ปิด");
+      String msq = (messageInfo != "") ? messageInfo : "";
+      msq += "\r\n===============\r\n- Relay Switch Status -\r\n" + actionName + ": " + relayStatus;
+      msq += (isAuto) ? " (Auto)" : " (Manual)";
+      Line_Notify(msq);
+      Serial.println("[" + actionName + "]: " + relayStatus);
+    }
   }
+}
 
+
+void actionCommand(String action, String state, String messageInfo, bool isAuto) {
+  if (action == "") return;
+  String actionName = "";
   if (action == "WATER_SPRINKLER") {
     actionName = "Water Sprinkler";
-    if (payload == "state:on") {
+    if (state == "state:on") {
       digitalWrite(WATER_SPRINKLER, LOW);
-      task2.in(10000000, stopWaterSpringkler);
     }
-    else
+    else {
       digitalWrite(WATER_SPRINKLER, HIGH);
-  }
-
-  if (action == "checking") {
-    checkCurrentStatus(false);
+    }
   }
 
   if (actionName != "") {
     checkCurrentStatus(true);
 
-    String relayStatus = String((payload == "state:on") ? "เปิด" : "ปิด");
+    String relayStatus = String((state == "state:on") ? "เปิด" : "ปิด");
     String msq = (messageInfo != "") ? messageInfo : "";
     msq += "\r\n===============\r\n- Relay Switch Status -\r\n" + actionName + ": " + relayStatus;
     msq += (isAuto) ? " (Auto)" : " (Manual)";
     Line_Notify(msq);
     Serial.println("[" + actionName + "]: " + relayStatus);
   }
-}
-
-bool stopWaterFallPump(void *) {
-  digitalWrite(WATER_FALL_PUMP, HIGH);
-  checkCurrentStatus(true);
-  return true; // repeat? true
 }
 
 bool stopWaterSpringkler(void *) {
@@ -220,7 +240,9 @@ void checkCurrentStatus(bool sendLineNotify) {
   String output;
   root.prettyPrintTo(output);
 
-  socket.sendJSON(SocketIoChannel, output);
+  //Publish to socket.io server
+  if (enableSocketIO)
+    webSocket.emit(SocketIoChannel, output.c_str());
 
   if (sendLineNotify) {
     //Send to Line Notify
@@ -233,9 +255,9 @@ void checkCurrentStatus(bool sendLineNotify) {
 
 void printMessage(String message, bool isPrintLn) {
   if (isPrintLn)
-    USE_SERIAL.println(message);
+    Serial.println(message);
   else
-    USE_SERIAL.print(message);
+    Serial.print(message);
 }
 
 void setup_Wifi() {
@@ -246,7 +268,7 @@ void setup_Wifi() {
     WiFi.softAPdisconnect(true);
   }
 
-  USE_SERIAL.println();
+  Serial.println();
   printMessage("WIFI Connecting...", true);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -255,11 +277,11 @@ void setup_Wifi() {
 
   //setup_IpAddress();
 
-  USE_SERIAL.println();
-  USE_SERIAL.print("WIFI Connected ");
-  String ip = WiFi.localIP().toString(); USE_SERIAL.println(ip.c_str());
-  USE_SERIAL.println("Socket.io Server: "); USE_SERIAL.print(SOCKETIO_HOST);
-  USE_SERIAL.println();
+  Serial.println();
+  Serial.print("WIFI Connected ");
+  String ip = WiFi.localIP().toString(); Serial.println(ip.c_str());
+  Serial.println("Socket.io Server: "); Serial.print(SOCKETIO_HOST);
+  Serial.println();
 }
 
 void setup_IpAddress() {
@@ -270,6 +292,10 @@ void setup_IpAddress() {
 }
 
 void Line_Notify(String message) {
+
+  if (!enableLineNotify)
+    return;
+
   axTLS::WiFiClientSecure client;
   if (!client.connect("notify-api.line.me", 443)) {
     Serial.println("connection failed");
@@ -301,63 +327,6 @@ void Line_Notify(String message) {
   Serial.println("-------------");
 }
 
-void handleRoot() {
-  String cmd;
-  cmd += "<!DOCTYPE HTML>\r\n";
-  cmd += "<html>\r\n";
-  cmd += "<head>";
-  cmd += "<meta http-equiv='refresh' content='5'/>";
-  cmd += "</head>";
-
-  cmd += "<br/>Waterfall Pump  : " + String((digitalRead(WATER_FALL_PUMP) == LOW) ? "ON" : "OFF");
-  cmd += "<br/>Water Sprinkler  : " + String((digitalRead(WATER_SPRINKLER) == LOW) ? "ON" : "OFF");
-
-  cmd += "<html>\r\n";
-  server.send(200, "text/html", cmd);
-}
-
-void handleRelaySwitch() {
-
-  pinMode(WATER_FALL_PUMP, OUTPUT); digitalWrite(WATER_FALL_PUMP, HIGH);
-  pinMode(WATER_SPRINKLER, OUTPUT); digitalWrite(WATER_SPRINKLER, HIGH);
-
-  server.on("/", handleRoot);
-  server.on("/WATER_FALL_PUMP=1", []() {
-    server.send(200, "text/plain", "WATER_FALL_PUMP = ON"); digitalWrite(WATER_FALL_PUMP, LOW);
-  });
-
-  server.on("/WATER_FALL_PUMP=0", []() {
-    server.send(200, "text/plain", "WATER_FALL_PUMP = OFF"); digitalWrite(WATER_FALL_PUMP, HIGH);
-  });
-
-  server.on("/WATER_SPRINKLER=1", []() {
-    server.send(200, "text/plain", "WATER_SPRINKLER = ON"); digitalWrite(WATER_SPRINKLER, LOW);
-  });
-
-  server.on("/WATER_SPRINKLER=0", []() {
-    server.send(200, "text/plain", "WATER_SPRINKLER = OFF"); digitalWrite(WATER_SPRINKLER, HIGH);
-  });
-
-  server.onNotFound(handleNotFound);
-  server.begin();
-  Serial.println("HTTP server started");
-}
-
-void handleNotFound() {
-  String message = "File Not Found\n\n";
-  message += "URI: ";
-  message += server.uri();
-  message += "\nMethod: ";
-  message += (server.method() == HTTP_GET) ? "GET" : "POST";
-  message += "\nArguments: ";
-  message += server.args();
-  message += "\n";
-  for (uint8_t i = 0; i < server.args(); i++) {
-    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
-  }
-  server.send(404, "text/plain", message);
-}
-
 String NowString() {
   time_t now = time(nullptr);
   struct tm* newtime = localtime(&now);
@@ -379,11 +348,11 @@ String NowString() {
 
 void setupTimeZone() {
   configTime(timezone, dst, ntp_server1, ntp_server2, ntp_server3);
-  USE_SERIAL.println("Waiting for time");
+  Serial.println("Waiting for time");
   while (!time(nullptr)) {
-    USE_SERIAL.print(".");
+    Serial.print(".");
     delay(500);
   }
-  USE_SERIAL.println();
-  USE_SERIAL.println("Now: " + NowString());
+  Serial.println();
+  Serial.println("Now: " + NowString());
 }
