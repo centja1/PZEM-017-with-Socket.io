@@ -24,7 +24,6 @@ const FormInput = (props: FormInputProps) => {
           <option value={60}>1 min</option>
           <option value={120}>2 min</option>
           <option value={300}>5 min</option>
-          <option value={600}>10 min</option>
         </Input>
       </FormGroup>
     </Form>
