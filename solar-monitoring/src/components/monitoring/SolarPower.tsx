@@ -133,11 +133,11 @@ export default (props: SolarPowerProps): ReactElement => {
   }, []);
 
   useEffect(() => {
-    broadcastData('checking', '');
+    broadcastData(RelaySwitch.CHECKING, '');
   }, []);
 
   const maxArr = 6;
-  const maxBatteryLevel = 13.0;
+  const maxBatteryLevel = 13.2;
   const minBatteryLevel = 10.5;
   useEffect(() => {
     const currTime = moment.utc().format(AppConfig.dateFormat);
@@ -299,7 +299,7 @@ export default (props: SolarPowerProps): ReactElement => {
           />
           <div>
             <Button
-              onClick={() => broadcastData('checking', '')}
+              onClick={() => broadcastData(RelaySwitch.CHECKING, '')}
               color='secondary'
               style={{ margin: 5, width: 200, height: 50 }}
             >
@@ -309,7 +309,7 @@ export default (props: SolarPowerProps): ReactElement => {
 
           <div>
             <Button
-              onClick={() => broadcastData('resetEnergy', '')}
+              onClick={() => broadcastData(RelaySwitch.RESET_ENERGY, '')}
               color='danger'
               style={{ margin: 5, width: 200, height: 50 }}
             >

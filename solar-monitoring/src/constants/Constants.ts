@@ -10,6 +10,8 @@ const RelaySwitch = {
   SPOTLIGHT: 'SPOTLIGHT',
   WATER_FALL_PUMP: 'WATER_FALL_PUMP',
   WATER_SPRINKLER: 'WATER_SPRINKLER',
+  CHECKING: 'checking',
+  RESET_ENERGY: 'resetEnergy',
 };
 
 const LocalStorageConfig = {

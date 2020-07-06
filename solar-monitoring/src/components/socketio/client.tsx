@@ -28,7 +28,7 @@ const broadcastData = (action: string, payload: any) => {
   console.log(['broadcastToClient', action, payload]);
   socket.emit('command', {
     action: action,
-    payload: payload,
+    payload: payload === '' ? {} : payload,
   });
 };
 

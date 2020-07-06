@@ -107,7 +107,7 @@ const SoiMoisture = (props: SoiMoistureProps) => {
   }, []);
 
   useEffect(() => {
-    broadcastData('checking', '');
+    broadcastData(RelaySwitch.CHECKING, '');
   }, []);
 
   const maxArr = 6;
@@ -247,7 +247,7 @@ const SoiMoisture = (props: SoiMoistureProps) => {
           </div>
           <div>
             <Button
-              onClick={() => broadcastData('checking', '')}
+              onClick={() => broadcastData(RelaySwitch.CHECKING, '')}
               color='secondary'
               style={{ margin: 5, width: 200, height: 50 }}
             >
@@ -257,7 +257,7 @@ const SoiMoisture = (props: SoiMoistureProps) => {
 
           <div>
             <Button
-              onClick={() => broadcastData('resetEnergy', '')}
+              onClick={() => broadcastData(RelaySwitch.RESET_ENERGY, '')}
               color='danger'
               style={{ margin: 5, width: 200, height: 50 }}
             >
