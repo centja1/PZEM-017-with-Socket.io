@@ -137,7 +137,7 @@ export default (props: SolarPowerProps): ReactElement => {
   }, []);
 
   const maxArr = 6;
-  const maxBatteryLevel = 13.2;
+  const maxBatteryLevel = 13.3;
   const minBatteryLevel = 10.5;
   useEffect(() => {
     const currTime = moment.utc().format(AppConfig.dateFormat);
