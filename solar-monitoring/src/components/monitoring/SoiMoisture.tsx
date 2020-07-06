@@ -23,6 +23,7 @@ import { AppConfig, RelaySwitch } from '../../constants/Constants';
 import { ChartModel } from '../../typings/chartModel';
 import { LogData } from '../../typings/logData';
 import FormInput from './FormInput';
+import Schedule from './Schedule';
 
 interface SoiMoistureProps {
   deviceName: string;
@@ -324,9 +325,11 @@ const SoiMoisture = (props: SoiMoistureProps) => {
                   value={soilMoisture}
                 />
               </Col>
-              <Col sm='4' style={{ textAlign: 'center' }}></Col>
               <Col sm='4' style={{ textAlign: 'right' }}>
                 <FormInput formRef={formRef} />
+              </Col>
+              <Col sm='4' style={{ textAlign: 'center' }}>
+                <Schedule />
               </Col>
             </Row>
           </Container>

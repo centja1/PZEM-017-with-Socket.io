@@ -515,7 +515,7 @@ void checkCurrentStatus(bool sendLineNotify) {
 
   if (sendLineNotify) {
     //Send to Line Notify
-    String status = "\r\nRelay Switch Status";
+    String status = "\r\nRelay Switch Status (ESP32)";
     status += "\r\nTBE Inverter 4000w: " + String((digitalRead(INVERTER) == LOW) ? "เปิด" : "ปิด");
     status += "\r\nCooling Fans: " + String((digitalRead(COOLING_FAN) == LOW) ? "เปิด" : "ปิด");
     status += "\r\nLight LED: " + String((digitalRead(LIGHT) == LOW) ? "เปิด" : "ปิด");

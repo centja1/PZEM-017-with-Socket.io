@@ -43,7 +43,7 @@ char ntp_server2[20] = "fw.eng.ku.ac.th";
 char ntp_server3[20] = "time.uni.net.th";
 int dst = 0;
 
-bool isDebugMode = false;
+bool isDebugMode = true;
 bool enableLineNotify = true;
 bool enableSocketIO = true;
 
@@ -141,7 +141,6 @@ String createResponse(float value) {
   if (isDebugMode)
     Serial.print(output);
 }
-
 
 void event(const char * payload, size_t length) {
   DynamicJsonBuffer jsonBuffer;
@@ -246,7 +245,7 @@ void checkCurrentStatus(bool sendLineNotify) {
 
   if (sendLineNotify) {
     //Send to Line Notify
-    String status = "\r\nRelay Switch Status";
+    String status = "\r\nRelay Switch Status (ESP8266)";
     status += "\r\nWaterfall Pump: " + String((digitalRead(WATER_FALL_PUMP) == LOW) ? "เปิด" : "ปิด");
     status += "\r\nWater Sprinkler: " + String((digitalRead(WATER_SPRINKLER) == LOW) ? "เปิด" : "ปิด");
     Line_Notify(status);
