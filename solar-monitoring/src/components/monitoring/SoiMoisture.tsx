@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Container, Row, Col, Button } from 'reactstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -22,6 +22,7 @@ import { RangePercentage } from '../../utils/RangePercentage';
 import { AppConfig, RelaySwitch } from '../../constants/Constants';
 import { ChartModel } from '../../typings/chartModel';
 import { LogData } from '../../typings/logData';
+import FormInput from './FormInput';
 
 interface SoiMoistureProps {
   deviceName: string;
@@ -60,6 +61,7 @@ const SoiMoisture = (props: SoiMoistureProps) => {
   const [percentageMoisture, setPercentageMoisture] = useState(0);
   const [temperature, setTemperature] = useState<number>(0);
   const [humidity, setHumidity] = useState<number>(0);
+  const formRef = useRef<any>();
   let dataLogs: LogData[] = [];
   useEffect(() => {
     const cb = (data: any) => {
@@ -167,7 +169,7 @@ const SoiMoisture = (props: SoiMoistureProps) => {
       case 2:
         broadcastData(RelaySwitch.WATER_SPRINKLER, {
           state: !waterSprinkler ? 'state:on' : 'state:off',
-          delay: 10,
+          delay: Number(formRef.current.value),
         });
         setDisableBtnWaterSprinklerSw(true);
         break;
@@ -321,6 +323,10 @@ const SoiMoisture = (props: SoiMoistureProps) => {
                   ]}
                   value={soilMoisture}
                 />
+              </Col>
+              <Col sm='4' style={{ textAlign: 'center' }}></Col>
+              <Col sm='4' style={{ textAlign: 'right' }}>
+                <FormInput formRef={formRef} />
               </Col>
             </Row>
           </Container>
