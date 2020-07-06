@@ -102,7 +102,7 @@ export default (props: SolarPowerProps): ReactElement => {
 
         ReduceMessage(100, dataLogs);
         setLogs([...dataLogs]);
-      } else if (data.deviceState) {
+      } else if (data.deviceState && data.deviceName === props.deviceName) {
         const {
           IpAddress,
           INVERTER,

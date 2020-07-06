@@ -84,7 +84,7 @@ const SoiMoisture = (props: SoiMoistureProps) => {
       } else if (data.sensor && data.deviceName === 'ESP32') {
         setTemperature(data.sensor.temperature);
         setHumidity(data.sensor.humidity);
-      } else if (data.deviceState) {
+      } else if (data.deviceState && data.deviceName === props.deviceName) {
         const {
           IpAddress,
           WATER_FALL_PUMP,
