@@ -1,6 +1,7 @@
 import React from 'react';
 import { Form, FormGroup, Label, Input } from 'reactstrap';
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faClock } from '@fortawesome/free-solid-svg-icons';
 interface FormInputProps {
   formRef: any;
 }
@@ -9,7 +10,9 @@ const FormInput = (props: FormInputProps) => {
   return (
     <Form inline>
       <FormGroup>
+        <FontAwesomeIcon icon={faClock} size='lg' style={{ marginRight: 5 }} />
         <Label for='txtDelayTime'>Delay Time : </Label>
+
         <Input
           type='select'
           name='select'

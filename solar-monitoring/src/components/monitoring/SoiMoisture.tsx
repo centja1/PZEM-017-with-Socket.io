@@ -179,6 +179,18 @@ const SoiMoisture = (props: SoiMoistureProps) => {
     }
   };
 
+  const dataText = (moisVal: number) => {
+    return moisVal >= 1000
+      ? 'Sensor is not in the Soil or DISCONNECTED'
+      : moisVal < 1000 && moisVal >= 600
+      ? 'Soil is DRY'
+      : moisVal < 600 && moisVal >= 370
+      ? 'Soil is HUMID'
+      : moisVal < 370
+      ? 'Sensor in WATER'
+      : '';
+  };
+
   return (
     <>
       <Row>
@@ -234,6 +246,9 @@ const SoiMoisture = (props: SoiMoistureProps) => {
               />
               <text x='18' y='20.35' className='percentage'>
                 {percentageMoisture.toFixed(1) + '%'}
+              </text>
+              <text x='10' y='25' style={{ fill: 'white', fontSize: '0.16em' }}>
+                {dataText(soilMoisture)}
               </text>
             </svg>
             <DayFlag temperature={temperature} humidity={humidity} />

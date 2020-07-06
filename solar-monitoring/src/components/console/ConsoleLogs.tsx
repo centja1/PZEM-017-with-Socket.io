@@ -12,6 +12,8 @@ import classnames from 'classnames';
 //import spinnerIcon from '../../assets/images/icon/spinner-preloader.gif';
 import './console.css';
 import { LogData } from '../../typings/logData';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faDatabase } from '@fortawesome/free-solid-svg-icons';
 
 interface ConsoleLogProps {
   logs: LogData[];
@@ -19,12 +21,17 @@ interface ConsoleLogProps {
 
 const ConsoleLogs = (props: ConsoleLogProps) => {
   return (
-    <div className='card-container-reflux'>
+    <div className='card-container-reflux' style={{ marginTop: 5 }}>
       {
         <>
           <Nav tabs>
             <NavItem>
               <NavLink className={classnames({ active: true })}>
+                <FontAwesomeIcon
+                  icon={faDatabase}
+                  size='lg'
+                  style={{ marginRight: 5 }}
+                />
                 Console Logs
               </NavLink>
             </NavItem>
