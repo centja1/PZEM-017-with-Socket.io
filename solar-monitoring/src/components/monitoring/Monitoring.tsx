@@ -4,6 +4,8 @@ import classnames from 'classnames';
 import SolarPower from './SolarPower';
 import SoiMoisture from './SoiMoisture';
 import { Storage } from '../../utils/Storage';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMicrochip, faNetworkWired } from '@fortawesome/free-solid-svg-icons';
 import './monitering.css';
 
 export default (): ReactElement => {
@@ -24,6 +26,11 @@ export default (): ReactElement => {
               toggle('1');
             }}
           >
+            <FontAwesomeIcon
+              icon={faNetworkWired}
+              size='lg'
+              style={{ marginRight: 5 }}
+            />
             IoT - Solar Project
           </NavLink>
         </NavItem>
@@ -34,6 +41,11 @@ export default (): ReactElement => {
               toggle('2');
             }}
           >
+            <FontAwesomeIcon
+              icon={faMicrochip}
+              size='lg'
+              style={{ marginRight: 5 }}
+            />
             Soil Moisture
           </NavLink>
         </NavItem>
