@@ -84,7 +84,7 @@ int dst = 0;
 
 float inverterVoltageStart = 13.30;
 float inverterVoltageShutdown = 11.20;
-float hightVoltage = 13.80;
+float hightVoltage = 15.10;
 float lowVoltage = 10.50;
 
 bool isDebugMode = true;
@@ -159,7 +159,7 @@ void loop() {
   //Shutdown Inverter on 15:00
   time_t now = time(nullptr);
   struct tm* p_tm = localtime(&now);
-  if (p_tm->tm_hour == 15 && p_tm->tm_min == 0 && p_tm->tm_sec == 0) {
+  if (p_tm->tm_hour == 15 && p_tm->tm_min == 30 && p_tm->tm_sec == 0) {
     if (currentMillis - time_1 >= INTERVAL_MESSAGE1) {
       time_1 = currentMillis;
       actionCommand("INVERTER", "state:off", "Invert หยุดทำงาน ที่เวลา 15:00", true, true);
@@ -225,7 +225,10 @@ bool readPzemSensor(void *) {
     batteryStatusMessage += "POWER: " + String(power) + "W\r\n";
     batteryStatusMessage += "ENERGY: " + String(energy_kWhtoday) + "WH";
 
-    if ((voltage >= inverterVoltageStart && voltage <= hightVoltage) &&  !inverterStarted) {
+    time_t now = time(nullptr);
+    struct tm* p_tm = localtime(&now);
+
+    if ((voltage >= inverterVoltageStart && voltage <= hightVoltage) &&  !inverterStarted && p_tm->tm_hour <= 15) {
       actionCommand("INVERTER", "state:on", batteryStatusMessage, true, true);
     }
 

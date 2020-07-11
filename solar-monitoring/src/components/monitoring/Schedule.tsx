@@ -14,7 +14,12 @@ import {
 import BootstrapSwitchButton from 'bootstrap-switch-button-react';
 import classnames from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCog, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCog,
+  faCalendarAlt,
+  faEdit,
+  faTrashAlt,
+} from '@fortawesome/free-solid-svg-icons';
 
 interface ScheduleProps {}
 
@@ -23,31 +28,50 @@ const Schedule = (props: ScheduleProps) => {
     {
       time: '8:25',
       state: 'ON',
+      delay: 20,
+      repeat: 'Sat,Sun',
       active: true,
     },
     {
       time: '10:00',
       state: 'ON',
+      delay: 20,
+      repeat: 'EveryDay',
       active: true,
     },
     {
       time: '12:30',
       state: 'ON',
+      delay: 30,
+      repeat: 'EveryDay',
       active: true,
     },
     {
       time: '13:00',
       state: 'ON',
+      delay: 20,
+      repeat: 'Mon,Tue,Wed',
       active: true,
     },
     {
       time: '15:00',
       state: 'OFF',
+      delay: 0,
+      repeat: 'Mon,Tue,Wed,Thu,Fri',
       active: true,
     },
     {
       time: '18:30',
       state: 'OFF',
+      delay: 0,
+      repeat: 'EveryDay',
+      active: false,
+    },
+    {
+      time: '20:00',
+      state: 'OFF',
+      delay: 0,
+      repeat: 'Mon,Tue,Wed,Thu,Fri',
       active: false,
     },
   ];
@@ -108,14 +132,37 @@ const Schedule = (props: ScheduleProps) => {
                           : 'warning'
                       }
                     >
-                      <Col sm='6' style={{ float: 'left', textAlign: 'left' }}>
-                        <Badge style={{ marginRight: 10 }}>{v.state}</Badge>
+                      <Col sm='4' style={{ float: 'left', textAlign: 'left' }}>
+                        <Badge style={{ marginRight: 2 }}>{v.state}</Badge>
                         <b>{v.time}</b>
                       </Col>
+
                       <Col
-                        sm='6'
+                        sm='8'
                         style={{ float: 'right', textAlign: 'right' }}
                       >
+                        {(v.delay || v.delay !== 0) && (
+                          <Badge
+                            color='danger'
+                            style={{
+                              fontWeight: 'bold',
+                              fontSize: 'xx-small',
+                            }}
+                          >
+                            {v.delay} Sec
+                          </Badge>
+                        )}{' '}
+                        {v.repeat && (
+                          <Badge
+                            color='success'
+                            style={{
+                              fontWeight: 'bold',
+                              fontSize: 'xx-small',
+                            }}
+                          >
+                            {v.repeat}
+                          </Badge>
+                        )}{' '}
                         <BootstrapSwitchButton
                           onlabel='Active'
                           offlabel='Disable'
@@ -123,6 +170,16 @@ const Schedule = (props: ScheduleProps) => {
                           width={75}
                           size='xs'
                           onstyle='secondary'
+                        />
+                        <FontAwesomeIcon
+                          icon={faEdit}
+                          size='lg'
+                          style={{ paddingLeft: 5 }}
+                        />
+                        <FontAwesomeIcon
+                          icon={faTrashAlt}
+                          size='lg'
+                          style={{ paddingLeft: 4 }}
                         />
                       </Col>
                     </ListGroupItem>

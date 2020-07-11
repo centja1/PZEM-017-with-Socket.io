@@ -318,8 +318,9 @@ const SoiMoisture = (props: SoiMoistureProps) => {
                 <FormInput formRef={formRef} />
                 <br />
                 <Schedule />
+                <br />
               </Col>
-              <Col sm='7' style={{ textAlign: 'left' }}>
+              <Col sm='7' style={{ textAlign: 'center' }}>
                 <Gauge
                   chartTitle='Soil Moisture'
                   min={0}
