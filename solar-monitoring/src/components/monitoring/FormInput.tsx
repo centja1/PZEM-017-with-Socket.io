@@ -11,13 +11,14 @@ const FormInput = (props: FormInputProps) => {
     <Form inline>
       <FormGroup>
         <FontAwesomeIcon icon={faClock} size='lg' style={{ marginRight: 5 }} />
-        <Label for='txtDelayTime'>Delay Time : </Label>
+        <Label for='txtDelayTime'>Delay Time </Label>
 
         <Input
           type='select'
           name='select'
           id='txtDelayTime'
           innerRef={props.formRef}
+          style={{ marginLeft: 5 }}
         >
           <option value={10}>10 sec</option>
           <option selected value={20}>

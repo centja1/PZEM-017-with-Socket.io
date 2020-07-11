@@ -321,7 +321,7 @@ export default (props: SolarPowerProps): ReactElement => {
           <Container>
             <Row>
               <Col
-                style={{ width: '100%', height: 350, marginTop: 10 }}
+                style={{ width: '100%', height: 340, marginTop: 10 }}
                 sm='12'
               >
                 <DailyChart

@@ -38,6 +38,9 @@ const CircularChart = (props: DayFlagProps) => {
             props.currentGauge.toFixed(2) +
             'A'}
         </text>
+        <text x='14' y='29' style={{ fill: 'yellow', fontSize: '0.14em' }}>
+          {props.temperature} C&deg;
+        </text>
       </svg>
       <DayFlag temperature={props.temperature} humidity={props.humidity} />
       <br />

@@ -30,6 +30,8 @@ interface SoiMoistureProps {
 }
 const SoiMoisture = (props: SoiMoistureProps) => {
   const [soilMoisture, setSoilMoisture] = useState<number>(0);
+  const [voltageGauge, setVoltageGauge] = useState<number>(0);
+  const [currentGauge, setCurrentGauge] = useState<number>(0);
   const [soilMoistureData, setSoilMoistureData] = useState<ChartModel[]>([
     {
       id: 'moisture (H)',
@@ -87,6 +89,8 @@ const SoiMoisture = (props: SoiMoistureProps) => {
       } else if (data.sensor && data.deviceName === 'ESP32') {
         setTemperature(data.sensor.temperature);
         setHumidity(data.sensor.humidity);
+        setVoltageGauge(data.sensor.voltage_usage);
+        setCurrentGauge(data.sensor.current_usage);
       } else if (data.deviceState && data.deviceName === props.deviceName) {
         const {
           IpAddress,
@@ -250,6 +254,16 @@ const SoiMoisture = (props: SoiMoistureProps) => {
               <text x='10' y='25' style={{ fill: 'white', fontSize: '0.16em' }}>
                 {dataText(soilMoisture)}
               </text>
+              <text
+                x='11'
+                y='28'
+                style={{ fill: 'yellow', fontSize: '0.13em' }}
+              >
+                {voltageGauge.toFixed(2) +
+                  'V / ' +
+                  currentGauge.toFixed(2) +
+                  'A'}
+              </text>
             </svg>
             <DayFlag temperature={temperature} humidity={humidity} />
             <br />
@@ -287,7 +301,7 @@ const SoiMoisture = (props: SoiMoistureProps) => {
           <Container>
             <Row>
               <Col
-                style={{ width: '100%', height: 350, marginTop: 10 }}
+                style={{ width: '100%', height: 340, marginTop: 10 }}
                 sm='12'
               >
                 <DailyChart
@@ -300,12 +314,17 @@ const SoiMoisture = (props: SoiMoistureProps) => {
               </Col>
             </Row>
             <Row>
-              <Col sm='4' style={{ textAlign: 'center' }}>
+              <Col sm='5' style={{ textAlign: 'center' }}>
+                <FormInput formRef={formRef} />
+                <br />
+                <Schedule />
+              </Col>
+              <Col sm='7' style={{ textAlign: 'left' }}>
                 <Gauge
                   chartTitle='Soil Moisture'
                   min={0}
                   max={1000}
-                  //height={230}
+                  height={240}
                   units='H'
                   plotBands={[
                     {
@@ -339,12 +358,71 @@ const SoiMoisture = (props: SoiMoistureProps) => {
                   ]}
                   value={soilMoisture}
                 />
-              </Col>
-              <Col sm='4' style={{ textAlign: 'right' }}>
-                <FormInput formRef={formRef} />
-              </Col>
-              <Col sm='4' style={{ textAlign: 'center' }}>
-                <Schedule />
+
+                <Gauge
+                  chartTitle='Temperature'
+                  min={0}
+                  max={100}
+                  height={240}
+                  units='C&deg;'
+                  plotBands={[
+                    {
+                      from: 0,
+                      to: 15,
+                      color: 'rgba(0, 255, 10, .50)',
+                    },
+                    {
+                      from: 15,
+                      to: 35,
+                      color: 'rgba(10, 10, 10, .25)',
+                    },
+                    {
+                      from: 35,
+                      to: 60,
+                      color: 'rgba(255, 255, 10, .50)',
+                    },
+                    {
+                      from: 60,
+                      to: 100,
+                      color: 'rgba(255, 50, 50, .50)',
+                    },
+                  ]}
+                  majorTicks={[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]}
+                  value={temperature}
+                />
+
+                <Gauge
+                  chartTitle='Humidity'
+                  min={0}
+                  max={100}
+                  height={240}
+                  units='H (%)'
+                  plotBands={[
+                    {
+                      from: 0,
+                      to: 30,
+                      color: 'rgba(255, 50, 50, .50)',
+                    },
+                    {
+                      from: 30,
+                      to: 50,
+                      color: 'rgba(255, 255, 10, .50)',
+                    },
+                    {
+                      from: 50,
+                      to: 70,
+                      color: 'rgba(10, 10, 10, .25)',
+                    },
+
+                    {
+                      from: 70,
+                      to: 100,
+                      color: 'rgba(0, 255, 10, .50)',
+                    },
+                  ]}
+                  majorTicks={[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]}
+                  value={humidity}
+                />
               </Col>
             </Row>
           </Container>
