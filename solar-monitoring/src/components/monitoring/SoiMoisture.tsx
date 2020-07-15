@@ -18,7 +18,6 @@ import './monitering.css';
 import Blik from '../common/Blik';
 import DayFlag from './DayFlag';
 import { ReduceMessage, ReduceData } from '../../utils/ReduceMessage';
-import { RangePercentage } from '../../utils/RangePercentage';
 import { AppConfig, RelaySwitch } from '../../constants/Constants';
 import { ChartModel } from '../../typings/chartModel';
 import { LogData } from '../../typings/logData';
@@ -61,7 +60,7 @@ const SoiMoisture = (props: SoiMoistureProps) => {
   const [disableBtnWaterSprinklerSw, setDisableBtnWaterSprinklerSw] = useState(
     false
   );
-  const [percentageMoisture, setPercentageMoisture] = useState(0);
+
   const [temperature, setTemperature] = useState<number>(0);
   const [humidity, setHumidity] = useState<number>(0);
   const formRef = useRef<any>();
@@ -122,7 +121,6 @@ const SoiMoisture = (props: SoiMoistureProps) => {
     let chartData = [...soilMoistureData];
     if (deviceData.moisture) {
       const moistureIndex = 0;
-      setPercentageMoisture(RangePercentage(deviceData.moisture, 0, 1000, 100));
       ReduceData(maxArr, chartData[moistureIndex].data);
       chartData[moistureIndex].data = [
         ...chartData[moistureIndex].data,
@@ -135,7 +133,6 @@ const SoiMoisture = (props: SoiMoistureProps) => {
 
     if (temperature) {
       const temperatureIndex = 1;
-      //setPercentageMoisture(RangePercentage(deviceData.moisture, 0, 1000, 100));
       ReduceData(maxArr, chartData[temperatureIndex].data);
       chartData[temperatureIndex].data = [
         ...chartData[temperatureIndex].data,
@@ -148,7 +145,6 @@ const SoiMoisture = (props: SoiMoistureProps) => {
 
     if (humidity) {
       const humidityIndex = 2;
-      //setPercentageMoisture(RangePercentage(deviceData.moisture, 0, 1000, 100));
       ReduceData(maxArr, chartData[humidityIndex].data);
       chartData[humidityIndex].data = [
         ...chartData[humidityIndex].data,
@@ -184,15 +180,30 @@ const SoiMoisture = (props: SoiMoistureProps) => {
   };
 
   const dataText = (moisVal: number) => {
-    return moisVal >= 1000
-      ? 'Sensor is not in the Soil or DISCONNECTED'
-      : moisVal < 1000 && moisVal >= 600
-      ? 'Soil is DRY'
-      : moisVal < 600 && moisVal >= 370
-      ? 'Soil is HUMID'
-      : moisVal < 370
-      ? 'Sensor in WATER'
-      : '';
+    let msg, color;
+    if (moisVal >= 1000) {
+      msg = 'Sensor is not in the Soil or DISCONNECTED';
+      color = 'black';
+    } else if (moisVal < 1000 && moisVal >= 600) {
+      msg = 'Soil is DRY';
+      color = 'red';
+    } else if (moisVal < 600 && moisVal >= 370) {
+      msg = 'Soil is HUMID';
+      color = 'orange';
+    } else if (moisVal < 370) {
+      msg = 'Sensor in WATER';
+      color = 'white'; // 'white';
+    }
+
+    return (
+      <text
+        x='8'
+        y='24'
+        style={{ fill: color, fontSize: '0.16em', fontWeight: 'bold' }}
+      >
+        {msg}
+      </text>
+    );
   };
 
   return (
@@ -243,20 +254,23 @@ const SoiMoisture = (props: SoiMoistureProps) => {
               />
               <path
                 className='circle'
-                stroke-dasharray={percentageMoisture.toFixed(2) + ', 100'}
+                stroke-dasharray={soilMoisture.toFixed(2) + ', 100'}
                 d='M18 2.0845
                 a 15.9155 15.9155 0 0 1 0 31.831
                 a 15.9155 15.9155 0 0 1 0 -31.831'
               />
-              <text x='18' y='20.35' className='percentage'>
-                {percentageMoisture.toFixed(1) + '%'}
+              <text
+                x='18'
+                y='18.35'
+                className='percentage'
+                style={{ fontSize: '0.7em' }}
+              >
+                {soilMoisture}
               </text>
-              <text x='10' y='25' style={{ fill: 'white', fontSize: '0.16em' }}>
-                {dataText(soilMoisture)}
-              </text>
+              {dataText(soilMoisture)}
               <text
                 x='11'
-                y='28'
+                y='27'
                 style={{ fill: 'yellow', fontSize: '0.13em' }}
               >
                 {voltageGauge.toFixed(2) +
