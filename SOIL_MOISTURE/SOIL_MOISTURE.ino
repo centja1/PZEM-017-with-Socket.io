@@ -86,6 +86,27 @@ void loop() {
     actionCommand("WATER_SPRINKLER", "state:off", "Water Sprinkler หยุดทำงาน ที่เวลา 18:00", true);
   }
 
+  // 07:00
+  if (p_tm->tm_hour == 7 && p_tm->tm_min == 0 && p_tm->tm_sec == 0) {
+    digitalWrite(WATER_SPRINKLER, LOW);
+    checkCurrentStatus(false);
+    task1.in(1000 * 20, stopWaterSpringkler);
+  }
+
+  // 12:00
+  if (p_tm->tm_hour == 12 && p_tm->tm_min == 0 && p_tm->tm_sec == 0) {
+    digitalWrite(WATER_SPRINKLER, LOW);
+    checkCurrentStatus(false);
+    task1.in(1000 * 20, stopWaterSpringkler);
+  }
+
+  // 17:00
+  if (p_tm->tm_hour == 17 && p_tm->tm_min == 0 && p_tm->tm_sec == 0) {
+    digitalWrite(WATER_SPRINKLER, LOW);
+    checkCurrentStatus(false);
+    task1.in(1000 * 20, stopWaterSpringkler);
+  }
+
   webSocket.loop();
   task1.tick();
   timer.tick();
@@ -167,6 +188,7 @@ void event(const char * payload, size_t length) {
       actionName = "Water Sprinkler";
       if (state == "state:on") {
         digitalWrite(WATER_SPRINKLER, LOW);
+        checkCurrentStatus(false);
         task1.in(1000 * delayTime, stopWaterSpringkler);
       }
       else {
