@@ -297,7 +297,7 @@ void event(const char * payload, size_t length) {
       digitalWrite(SPOTLIGHT, (state == "state:on") ? LOW : HIGH);
     }
 
-    if (action == "checking") {
+    if (action == "CHECKING") {
       checkCurrentStatus(false);
     }
 
@@ -309,7 +309,7 @@ void event(const char * payload, size_t length) {
       inverterVoltageShutdown = state.toFloat();
     }
 
-    if (action == "resetEnergy") {
+    if (action == "ENERGY_RESET") {
       pzem.resetEnergy();
     }
 
@@ -446,7 +446,7 @@ void actionCommand(String action, String payload, String messageInfo, bool isAut
     digitalWrite(SPOTLIGHT, (payload == "state:on") ? LOW : HIGH);
   }
 
-  if (action == "checking") {
+  if (action == "CHECKING") {
     checkCurrentStatus(false);
   }
 
@@ -458,7 +458,7 @@ void actionCommand(String action, String payload, String messageInfo, bool isAut
     inverterVoltageShutdown = payload.toFloat();
   }
 
-  if (action == "resetEnergy") {
+  if (action == "ENERGY_RESET") {
     pzem.resetEnergy();
   }
 

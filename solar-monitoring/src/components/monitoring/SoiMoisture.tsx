@@ -6,6 +6,7 @@ import {
   faCheckCircle,
   faSyncAlt,
   faTint,
+  faCannabis,
 } from '@fortawesome/free-solid-svg-icons';
 
 //init module
@@ -52,9 +53,14 @@ const SoiMoisture = (props: SoiMoistureProps) => {
   const [deviceData, setDeviceData] = useState<any>([]);
   const [logs, setLogs] = useState<any>([]);
   const [deviceIpAddress, setDeviceIpAddress] = useState('');
-  const [waterfallPumpSwitch, setWaterfallPumpSwitch] = useState(false);
+  const [waterFallPumpSwitch, setWaterFallPumpSwitch] = useState(false);
+  const [waterThePlantsSwitch, setWaterThePlantsSwitch] = useState(false);
   const [waterSprinkler, setWaterSprinkler] = useState(false);
-  const [disableBtnWaterfallPumpSw, setDisableBtnWaterfallPumpSw] = useState(
+
+  const [disableBtnWaterFallPumpSw, setDisableBtnWaterFallPumpSw] = useState(
+    false
+  );
+  const [disableBtnWaterThePlantsSw, setDisableBtnWaterThePlansSw] = useState(
     false
   );
   const [disableBtnWaterSprinklerSw, setDisableBtnWaterSprinklerSw] = useState(
@@ -94,14 +100,16 @@ const SoiMoisture = (props: SoiMoistureProps) => {
         const {
           IpAddress,
           WATER_FALL_PUMP,
+          WATER_THE_PLANTS,
           WATER_SPRINKLER,
         } = data.deviceState;
 
         setDeviceIpAddress(IpAddress);
-        setWaterfallPumpSwitch(WATER_FALL_PUMP === 'ON');
+        setWaterFallPumpSwitch(WATER_FALL_PUMP === 'ON');
+        setWaterThePlantsSwitch(WATER_THE_PLANTS === 'ON');
         setWaterSprinkler(WATER_SPRINKLER === 'ON');
 
-        setDisableBtnWaterfallPumpSw(false);
+        setDisableBtnWaterThePlansSw(false);
         setDisableBtnWaterSprinklerSw(false);
 
         //console.log(data.deviceState);
@@ -162,10 +170,10 @@ const SoiMoisture = (props: SoiMoistureProps) => {
   const handleSwitch = (sw: number) => {
     switch (sw) {
       case 1:
-        broadcastData(RelaySwitch.WATER_FALL_PUMP, {
-          state: !waterfallPumpSwitch ? 'state:on' : 'state:off',
+        broadcastData(RelaySwitch.WATER_THE_PLANTS, {
+          state: !waterThePlantsSwitch ? 'state:on' : 'state:off',
         });
-        setDisableBtnWaterfallPumpSw(true);
+        setDisableBtnWaterThePlansSw(true);
         break;
       case 2:
         broadcastData(RelaySwitch.WATER_SPRINKLER, {
@@ -173,6 +181,12 @@ const SoiMoisture = (props: SoiMoistureProps) => {
           delay: Number(formRef.current.value),
         });
         setDisableBtnWaterSprinklerSw(true);
+        break;
+      case 3:
+        broadcastData(RelaySwitch.WATER_FALL_PUMP, {
+          state: !waterFallPumpSwitch ? 'state:on' : 'state:off',
+        });
+        setDisableBtnWaterFallPumpSw(true);
         break;
       default:
         break;
@@ -216,25 +230,40 @@ const SoiMoisture = (props: SoiMoistureProps) => {
           }}
         >
           <br />
+
           <div>
-            {/* {waterfallPumpSwitch ? "ON " : "OFF "}{" "} */}
+            {/* {waterThePlantsSwitch ? "ON " : "OFF "}{" "} */}
             <Button
-              disabled={disableBtnWaterfallPumpSw}
+              disabled={disableBtnWaterFallPumpSw}
               onClick={() => handleSwitch(1)}
               color='info'
-              style={{ margin: 5, width: 200, height: 50 }}
+              style={{ margin: 5, width: 210, height: 50 }}
             >
               Waterfall Pump <FontAwesomeIcon icon={faWater} size='lg' />
-              {Blik(waterfallPumpSwitch)}
+              {Blik(waterFallPumpSwitch)}
             </Button>
           </div>
+
+          <div>
+            {/* {waterThePlantsSwitch ? "ON " : "OFF "}{" "} */}
+            <Button
+              disabled={disableBtnWaterThePlantsSw}
+              onClick={() => handleSwitch(1)}
+              color='warning'
+              style={{ margin: 5, width: 210, height: 50 }}
+            >
+              Water the plants <FontAwesomeIcon icon={faCannabis} size='lg' />
+              {Blik(waterThePlantsSwitch)}
+            </Button>
+          </div>
+
           <div>
             {/* {waterSprinkler ? "ON " : "OFF "} */}
             <Button
               disabled={disableBtnWaterSprinklerSw}
               onClick={() => handleSwitch(2)}
               color='success'
-              style={{ margin: 5, width: 200, height: 50 }}
+              style={{ margin: 5, width: 210, height: 50 }}
             >
               Water Sprinkler <FontAwesomeIcon icon={faTint} size='lg' />
               {Blik(waterSprinkler)}
@@ -320,7 +349,7 @@ const SoiMoisture = (props: SoiMoistureProps) => {
               >
                 <DailyChart
                   data={soilMoistureData}
-                  title='Soil Moisture Monitoring'
+                  title='Smart Garden with IoT Plant Monitoring System'
                   legend='Sensor data'
                   colors='category10'
                   isDecimalFormat={false}

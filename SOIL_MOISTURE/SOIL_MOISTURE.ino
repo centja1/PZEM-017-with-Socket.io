@@ -7,7 +7,6 @@
   Relay Switch
   D1
   D2
-
   For Soil Moisture Sensor
   AO (analogPin)
 */
@@ -48,7 +47,7 @@ bool enableLineNotify = true;
 bool enableSocketIO = true;
 
 
-int WATER_FALL_PUMP = D1;
+int WATER_THE_PLANTS = D1;
 int WATER_SPRINKLER = D2;
 int LEDPIN = 16;
 int ANALOG_PIN = A0;
@@ -64,7 +63,7 @@ void setup() {
   Serial.begin(115200); //For debug on cosole (PC)
   pinMode(LEDPIN, OUTPUT);
 
-  pinMode(WATER_FALL_PUMP, OUTPUT); digitalWrite(WATER_FALL_PUMP, HIGH);
+  pinMode(WATER_THE_PLANTS, OUTPUT); digitalWrite(WATER_THE_PLANTS, HIGH);
   pinMode(WATER_SPRINKLER, OUTPUT); digitalWrite(WATER_SPRINKLER, HIGH);
 
   setup_Wifi();
@@ -175,12 +174,12 @@ void event(const char * payload, size_t length) {
     bool isAuto = root["payload"]["isAuto"];
 
     String actionName = "";
-    if (action == "WATER_FALL_PUMP") {
-      actionName = "Waterfall Pump";
+    if (action == "WATER_THE_PLANTS") {
+      actionName = "Water The Plants";
       if (state == "state:on") {
-        digitalWrite(WATER_FALL_PUMP, LOW);
+        digitalWrite(WATER_THE_PLANTS, LOW);
       } else {
-        digitalWrite(WATER_FALL_PUMP, HIGH);
+        digitalWrite(WATER_THE_PLANTS, HIGH);
       }
     }
 
@@ -253,7 +252,7 @@ void checkCurrentStatus(bool sendLineNotify) {
   root["lastUpdated"] = NowString();
 
   JsonObject& data = root.createNestedObject("deviceState");
-  data["WATER_FALL_PUMP"] = String((digitalRead(WATER_FALL_PUMP) == LOW) ? "ON" : "OFF");
+  data["WATER_THE_PLANTS"] = String((digitalRead(WATER_THE_PLANTS) == LOW) ? "ON" : "OFF");
   data["WATER_SPRINKLER"] = String((digitalRead(WATER_SPRINKLER) == LOW) ? "ON" : "OFF");
 
   data["IpAddress"] = WiFi.localIP().toString();
@@ -268,7 +267,7 @@ void checkCurrentStatus(bool sendLineNotify) {
   if (sendLineNotify) {
     //Send to Line Notify
     String status = "\r\nRelay Switch Status (ESP8266)";
-    status += "\r\nWaterfall Pump: " + String((digitalRead(WATER_FALL_PUMP) == LOW) ? "เปิด" : "ปิด");
+    status += "\r\nWater The Plants: " + String((digitalRead(WATER_THE_PLANTS) == LOW) ? "เปิด" : "ปิด");
     status += "\r\nWater Sprinkler: " + String((digitalRead(WATER_SPRINKLER) == LOW) ? "เปิด" : "ปิด");
     Line_Notify(status);
   }
