@@ -2,12 +2,12 @@ import React, { ReactElement, useState, useEffect } from 'react';
 import { Container, Row, Col, Button } from 'reactstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faBroadcastTower,
   faCheckCircle,
   faSyncAlt,
   faFan,
   faLightbulb,
   faBolt,
+  faPlug,
 } from '@fortawesome/free-solid-svg-icons';
 
 //init module
@@ -239,9 +239,9 @@ export default (props: SolarPowerProps): ReactElement => {
               disabled={disableBtnInverterSw}
               onClick={() => handleSwitch(1)}
               color='primary'
-              style={{ margin: 5, width: 200, height: 50 }}
+              style={{ margin: 5, width: 210, height: 50 }}
             >
-              Inverter <FontAwesomeIcon icon={faBroadcastTower} size='lg' />
+              Inverter <FontAwesomeIcon icon={faPlug} size='lg' />
               {Blik(inverterSwitch)}
             </Button>
           </div>
@@ -251,7 +251,7 @@ export default (props: SolarPowerProps): ReactElement => {
               disabled={disableBtnCoolingFansSw}
               onClick={() => handleSwitch(2)}
               color='warning'
-              style={{ margin: 5, width: 200, height: 50 }}
+              style={{ margin: 5, width: 210, height: 50 }}
             >
               Cooling Fans <FontAwesomeIcon icon={faFan} size='lg' />
               {Blik(coolingFans)}
@@ -263,7 +263,7 @@ export default (props: SolarPowerProps): ReactElement => {
               disabled={disableBtnLightSw}
               onClick={() => handleSwitch(3)}
               color='info'
-              style={{ margin: 5, width: 200, height: 50 }}
+              style={{ margin: 5, width: 210, height: 50 }}
             >
               LED Light <FontAwesomeIcon icon={faLightbulb} size='lg' />
               {Blik(lightSwitch)}
@@ -275,7 +275,7 @@ export default (props: SolarPowerProps): ReactElement => {
               disabled={disableBtnSpotlightSw}
               onClick={() => handleSwitch(4)}
               color='success'
-              style={{ margin: 5, width: 200, height: 50 }}
+              style={{ margin: 5, width: 210, height: 50 }}
             >
               Spotlight <FontAwesomeIcon icon={faBolt} size='lg' />
               {Blik(spotLight)}
@@ -301,7 +301,7 @@ export default (props: SolarPowerProps): ReactElement => {
             <Button
               onClick={() => broadcastData(RelaySwitch.CHECKING, '')}
               color='secondary'
-              style={{ margin: 5, width: 200, height: 50 }}
+              style={{ margin: 5, width: 210, height: 50 }}
             >
               Check <FontAwesomeIcon icon={faCheckCircle} size='lg' />
             </Button>
@@ -311,7 +311,7 @@ export default (props: SolarPowerProps): ReactElement => {
             <Button
               onClick={() => broadcastData(RelaySwitch.RESET_ENERGY, '')}
               color='danger'
-              style={{ margin: 5, width: 200, height: 50 }}
+              style={{ margin: 5, width: 210, height: 50 }}
             >
               Energy Reset <FontAwesomeIcon icon={faSyncAlt} size='lg' />
             </Button>
