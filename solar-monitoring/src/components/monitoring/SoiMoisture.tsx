@@ -170,24 +170,25 @@ const SoiMoisture = (props: SoiMoistureProps) => {
   const handleSwitch = (sw: number) => {
     switch (sw) {
       case 1:
+        broadcastData(RelaySwitch.WATER_FALL_PUMP, {
+          state: !waterFallPumpSwitch ? 'state:on' : 'state:off',
+        });
+        setDisableBtnWaterFallPumpSw(true);
+        break;
+      case 2:
         broadcastData(RelaySwitch.WATER_THE_PLANTS, {
           state: !waterThePlantsSwitch ? 'state:on' : 'state:off',
         });
         setDisableBtnWaterThePlansSw(true);
         break;
-      case 2:
+      case 3:
         broadcastData(RelaySwitch.WATER_SPRINKLER, {
           state: !waterSprinkler ? 'state:on' : 'state:off',
           delay: Number(formRef.current.value),
         });
         setDisableBtnWaterSprinklerSw(true);
         break;
-      case 3:
-        broadcastData(RelaySwitch.WATER_FALL_PUMP, {
-          state: !waterFallPumpSwitch ? 'state:on' : 'state:off',
-        });
-        setDisableBtnWaterFallPumpSw(true);
-        break;
+
       default:
         break;
     }
@@ -248,7 +249,7 @@ const SoiMoisture = (props: SoiMoistureProps) => {
             {/* {waterThePlantsSwitch ? "ON " : "OFF "}{" "} */}
             <Button
               disabled={disableBtnWaterThePlantsSw}
-              onClick={() => handleSwitch(1)}
+              onClick={() => handleSwitch(2)}
               color='warning'
               style={{ margin: 5, width: 210, height: 50 }}
             >
@@ -261,7 +262,7 @@ const SoiMoisture = (props: SoiMoistureProps) => {
             {/* {waterSprinkler ? "ON " : "OFF "} */}
             <Button
               disabled={disableBtnWaterSprinklerSw}
-              onClick={() => handleSwitch(2)}
+              onClick={() => handleSwitch(3)}
               color='success'
               style={{ margin: 5, width: 210, height: 50 }}
             >
