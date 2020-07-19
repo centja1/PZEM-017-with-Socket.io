@@ -178,6 +178,7 @@ const SoiMoisture = (props: SoiMoistureProps) => {
       case 2:
         broadcastData(RelaySwitch.WATER_THE_PLANTS, {
           state: !waterThePlantsSwitch ? 'state:on' : 'state:off',
+          delay: Number(formRef.current.value),
         });
         setDisableBtnWaterThePlansSw(true);
         break;
@@ -205,9 +206,12 @@ const SoiMoisture = (props: SoiMoistureProps) => {
     } else if (moisVal < 600 && moisVal >= 370) {
       msg = 'Soil is HUMID';
       color = 'orange';
-    } else if (moisVal < 370) {
+    } else if (moisVal < 370 && moisVal >= 20) {
       msg = 'Sensor in WATER';
-      color = 'white'; // 'white';
+      color = 'white';
+    } else if (moisVal < 10) {
+      msg = 'Sensor is not in the Soil or DISCONNECTED';
+      color = 'red';
     }
 
     return (

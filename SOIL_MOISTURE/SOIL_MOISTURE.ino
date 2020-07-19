@@ -57,6 +57,7 @@ SocketIoClient webSocket;
 auto timer = timer_create_default(); // create a timer with default settings
 Timer<> default_timer; // save as above
 Timer<1, millis> task1;
+Timer<1, millis> task2;
 
 void setup() {
 
@@ -76,7 +77,7 @@ void setup() {
   timer.every(2000, readSoilMoistureSensor);
 }
 
-
+int moisVal = 0;
 void loop() {
 
   time_t now = time(nullptr);
@@ -85,33 +86,54 @@ void loop() {
     actionCommand("WATER_SPRINKLER", "state:off", "Water Sprinkler หยุดทำงาน ที่เวลา 18:00", true);
   }
 
+  if (p_tm->tm_hour == 18 && p_tm->tm_min == 0 && p_tm->tm_sec == 2) {
+    actionCommand("WATER_THE_PLANTS", "state:off", "Water The Plants หยุดทำงาน ที่เวลา 18:00", true);
+  }
+
+  //Vegetable gardenVegetable garden (Auto stop within 30 sec)
   // 07:00
-  if (p_tm->tm_hour == 7 && p_tm->tm_min == 0 && p_tm->tm_sec == 0) {
+  if (p_tm->tm_hour == 7 && p_tm->tm_min == 0 && p_tm->tm_sec == 0 && moisVal > 380) {
     digitalWrite(WATER_SPRINKLER, LOW);
     checkCurrentStatus(false);
-    task1.in(1000 * 20, stopWaterSpringkler);
+    task1.in(1000 * 30, stopWaterSpringkler);
   }
 
   // 12:00
-  if (p_tm->tm_hour == 12 && p_tm->tm_min == 0 && p_tm->tm_sec == 0) {
+  if (p_tm->tm_hour == 12 && p_tm->tm_min == 0 && p_tm->tm_sec == 0 && moisVal > 380) {
     digitalWrite(WATER_SPRINKLER, LOW);
     checkCurrentStatus(false);
-    task1.in(1000 * 20, stopWaterSpringkler);
+    task1.in(1000 * 30, stopWaterSpringkler);
   }
 
   // 17:00
-  if (p_tm->tm_hour == 17 && p_tm->tm_min == 0 && p_tm->tm_sec == 0) {
+  if (p_tm->tm_hour == 17 && p_tm->tm_min == 0 && p_tm->tm_sec == 0 && moisVal > 380) {
     digitalWrite(WATER_SPRINKLER, LOW);
     checkCurrentStatus(false);
-    task1.in(1000 * 20, stopWaterSpringkler);
+    task1.in(1000 * 30, stopWaterSpringkler);
+  }
+
+
+  // Water the plants  (Auto stop within 30 sec)
+  // 07:30
+  if (p_tm->tm_hour == 7 && p_tm->tm_min == 30 && p_tm->tm_sec == 0 && moisVal > 380) {
+    digitalWrite(WATER_THE_PLANTS, LOW);
+    checkCurrentStatus(false);
+    task2.in(1000 * 30, stopWaterThePlants);
+  }
+
+  // 17:30
+  if (p_tm->tm_hour == 17 && p_tm->tm_min == 30 && p_tm->tm_sec == 0 && moisVal > 380) {
+    digitalWrite(WATER_THE_PLANTS, LOW);
+    checkCurrentStatus(false);
+    task2.in(1000 * 30, stopWaterThePlants);
   }
 
   webSocket.loop();
   task1.tick();
+  task2.tick();
   timer.tick();
 }
 
-int moisVal = 0;
 bool readSoilMoistureSensor(void *) {
   moisVal = analogRead(ANALOG_PIN);
   if (moisVal > 0) {
@@ -174,15 +196,6 @@ void event(const char * payload, size_t length) {
     bool isAuto = root["payload"]["isAuto"];
 
     String actionName = "";
-    if (action == "WATER_THE_PLANTS") {
-      actionName = "Water The Plants";
-      if (state == "state:on") {
-        digitalWrite(WATER_THE_PLANTS, LOW);
-      } else {
-        digitalWrite(WATER_THE_PLANTS, HIGH);
-      }
-    }
-
     if (action == "WATER_SPRINKLER") {
       actionName = "Water Sprinkler";
       if (state == "state:on") {
@@ -192,6 +205,17 @@ void event(const char * payload, size_t length) {
       }
       else {
         digitalWrite(WATER_SPRINKLER, HIGH);
+      }
+    }
+
+    if (action == "WATER_THE_PLANTS") {
+      actionName = "Water The Plants";
+      if (state == "state:on") {
+        digitalWrite(WATER_THE_PLANTS, LOW);
+        checkCurrentStatus(false);
+        task2.in(1000 * delayTime, stopWaterThePlants);
+      } else {
+        digitalWrite(WATER_THE_PLANTS, HIGH);
       }
     }
 
@@ -226,6 +250,17 @@ void actionCommand(String action, String state, String messageInfo, bool isAuto)
     }
   }
 
+
+  if (action == "WATER_THE_PLANTS") {
+    actionName = "Water The Plants";
+    if (state == "state:on") {
+      digitalWrite(WATER_THE_PLANTS, LOW);
+    }
+    else {
+      digitalWrite(WATER_THE_PLANTS, HIGH);
+    }
+  }
+
   if (actionName != "") {
     checkCurrentStatus(true);
 
@@ -240,6 +275,12 @@ void actionCommand(String action, String state, String messageInfo, bool isAuto)
 
 bool stopWaterSpringkler(void *) {
   digitalWrite(WATER_SPRINKLER, HIGH);
+  checkCurrentStatus(true);
+  return true; // repeat? true
+}
+
+bool stopWaterThePlants(void *) {
+  digitalWrite(WATER_THE_PLANTS, HIGH);
   checkCurrentStatus(true);
   return true; // repeat? true
 }
