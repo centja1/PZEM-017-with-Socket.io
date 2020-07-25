@@ -3,4 +3,5 @@ export type powerData = {
   current: number;
   power: number;
   energy: number;
+  time: string;
 };

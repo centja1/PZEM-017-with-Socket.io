@@ -57,13 +57,11 @@ const DailyChart = (props: DailyChartProps): ReactElement => {
           bottom: 70,
           left: 60,
         }}
-        xFormat='time:%Y-%m-%d %H:%M %S'
+        //xFormat='time:%Y-%m-%d %H:%M %S'
         xScale={{
           type: 'time',
           format: '%Y-%m-%d %H:%M %S',
-          precision: 'second', //second, minute, day
-          //minute
-          //day
+          precision: 'second', // 'millisecond' | 'second' | 'minute' | 'hour' | 'month' | 'year' | 'day'
         }}
         yScale={{ type: 'linear', min: 'auto', max: 'auto' }}
         //curve='linear'
@@ -77,7 +75,7 @@ const DailyChart = (props: DailyChartProps): ReactElement => {
           tickPadding: 5,
           tickRotation: 0,
           format: '%H:%M %S',
-          tickValues: 'every 2 second', //hours , minutes
+          tickValues: 'every 1 second', //hours , minutes
           legend: 'Time',
           legendOffset: 36,
           legendPosition: 'middle', // start, middle, end

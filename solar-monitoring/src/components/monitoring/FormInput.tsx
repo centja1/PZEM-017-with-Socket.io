@@ -19,11 +19,10 @@ const FormInput = (props: FormInputProps) => {
           id='txtDelayTime'
           innerRef={props.formRef}
           style={{ marginLeft: 5 }}
+          defaultValue={20}
         >
           <option value={10}>10 sec</option>
-          <option selected value={20}>
-            20 sec
-          </option>
+          <option value={20}>20 sec</option>
           <option value={30}>30 sec</option>
           <option value={60}>1 min</option>
           <option value={120}>2 min</option>

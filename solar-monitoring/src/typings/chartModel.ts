@@ -1,5 +1,5 @@
 export type ChartSeries = {
-  x: string;
+  x: string | number | Date;
   y: number;
 };
 

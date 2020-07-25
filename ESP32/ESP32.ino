@@ -463,7 +463,7 @@ void actionCommand(String action, String payload, String messageInfo, bool isAut
   }
 
   if (actionName != "") {
-    checkCurrentStatus(true);
+    checkCurrentStatus(isSendNotify);
 
     String relayStatus = String((payload == "state:on") ? "เปิด" : "ปิด");
     String msq = (messageInfo != "") ? messageInfo : "";

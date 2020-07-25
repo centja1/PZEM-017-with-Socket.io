@@ -23,7 +23,7 @@ import CircularChart from './CircularChart';
 import { ReduceMessage, ReduceData } from '../../utils/ReduceMessage';
 import { RangePercentage, RangNumber } from '../../utils/RangePercentage';
 import { AppConfig, RelaySwitch } from '../../constants/Constants';
-import { ChartModel } from '../../typings/chartModel';
+import { ChartModel, ChartSeries } from '../../typings/chartModel';
 import { LogData } from '../../typings/logData';
 import { powerData } from '../../typings/powerData';
 
@@ -93,12 +93,14 @@ export default (props: SolarPowerProps): ReactElement => {
         setTemperature(data.sensor.temperature);
         setHumidity(data.sensor.humidity);
 
-        setDeviceData({
-          voltage: data.sensor.voltage_usage,
-          current: data.sensor.current_usage,
-          power: data.sensor.active_power,
-          energy: data.sensor.active_energy,
-        });
+        if (data.sensor.voltage_usage)
+          setDeviceData({
+            voltage: data.sensor.voltage_usage,
+            current: data.sensor.current_usage,
+            power: data.sensor.active_power,
+            energy: data.sensor.active_energy,
+            time: data.time,
+          });
 
         ReduceMessage(100, dataLogs);
         setLogs([...dataLogs]);
@@ -141,7 +143,6 @@ export default (props: SolarPowerProps): ReactElement => {
   const minBatteryLevel = 10.5;
   useEffect(() => {
     const currTime = moment.utc().format(AppConfig.dateFormat);
-    //console.log(currTime);
     let chartData = [...batteryData];
     if (deviceData?.power) {
       const powerIndex = 0;
@@ -151,7 +152,7 @@ export default (props: SolarPowerProps): ReactElement => {
         {
           x: currTime,
           y: deviceData.power,
-        },
+        } as ChartSeries,
       ];
     }
 
@@ -163,7 +164,7 @@ export default (props: SolarPowerProps): ReactElement => {
         {
           x: currTime,
           y: deviceData.current,
-        },
+        } as ChartSeries,
       ];
     }
 
@@ -183,7 +184,7 @@ export default (props: SolarPowerProps): ReactElement => {
         {
           x: currTime,
           y: deviceData.voltage,
-        },
+        } as ChartSeries,
       ];
     }
 
@@ -320,10 +321,7 @@ export default (props: SolarPowerProps): ReactElement => {
         <Col sm='9'>
           <Container>
             <Row>
-              <Col
-                style={{ width: '100%', height: 340, marginTop: 10 }}
-                sm='12'
-              >
+              <Col style={{ width: '100%', height: 340, marginTop: 8 }} sm='12'>
                 <DailyChart
                   data={batteryData}
                   title='Real time Battery Monitoring'
@@ -389,31 +387,32 @@ export default (props: SolarPowerProps): ReactElement => {
                 <Gauge
                   chartTitle='Current'
                   min={0}
-                  max={10}
+                  max={20}
                   units='A'
                   plotBands={[
                     {
                       from: 0,
-                      to: 2,
+                      to: 4,
                       color: 'rgba(0, 255, 10, .50)',
                     },
                     {
-                      from: 2,
-                      to: 5,
+                      from: 4,
+                      to: 8,
                       color: 'rgba(10, 10, 10, .25)',
                     },
                     {
-                      from: 5,
-                      to: 8,
+                      from: 8,
+                      to: 14,
                       color: 'rgba(255, 255, 10, .50)',
                     },
                     {
-                      from: 8,
-                      to: 10,
+                      from: 14,
+                      to: 20,
                       color: 'rgba(255, 50, 50, .50)',
                     },
                   ]}
-                  majorTicks={RangNumber(0, 10)}
+                  // majorTicks={RangNumber(0, 20)}
+                  majorTicks={[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]}
                   value={currentGauge}
                 />
                 {/* <GaugeMeter

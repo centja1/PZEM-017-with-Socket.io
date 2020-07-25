@@ -122,8 +122,9 @@ const Schedule = (props: ScheduleProps) => {
             <Col sm='12'>
               <ListGroup horizontal={false} style={{ marginTop: 5 }}>
                 {data &&
-                  data.map((v) => (
+                  data.map((v, index) => (
                     <ListGroupItem
+                      key={index}
                       color={
                         v.state === 'ON'
                           ? 'success'
