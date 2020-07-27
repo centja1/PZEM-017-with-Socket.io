@@ -9,6 +9,7 @@ interface DayFlagProps {
   percentageVal: number;
   voltageGauge: number;
   currentGauge: number;
+  powerGauge: number;
   inverterVoltageStart?: number;
   inverterVoltageShutdown?: number;
 }
@@ -29,18 +30,26 @@ const CircularChart = (props: DayFlagProps) => {
                 a 15.9155 15.9155 0 0 1 0 31.831
                 a 15.9155 15.9155 0 0 1 0 -31.831'
         />
+        {props.temperature && (
+          <text x='15' y='10' style={{ fill: 'yellow', fontSize: '0.14em' }}>
+            {props.temperature} C&deg;
+          </text>
+        )}
+
         <text x='18' y='20.35' className='percentage'>
           {props.percentageVal.toFixed(1) + '%'}
         </text>
-        <text x='10' y='25' style={{ fill: 'white', fontSize: '0.16em' }}>
+        <text x='9' y='25' style={{ fill: 'white', fontSize: '0.16em' }}>
           {props.voltageGauge.toFixed(2) +
-            'V / ' +
+            ' V / ' +
             props.currentGauge.toFixed(2) +
-            'A'}
+            ' A'}
         </text>
-        <text x='14' y='29' style={{ fill: 'yellow', fontSize: '0.14em' }}>
-          {props.temperature} C&deg;
-        </text>
+        {props.powerGauge && (
+          <text x='13' y='28' style={{ fill: 'white', fontSize: '0.16em' }}>
+            {props.powerGauge.toFixed(2)} W
+          </text>
+        )}
       </svg>
       <DayFlag temperature={props.temperature} humidity={props.humidity} />
       <br />

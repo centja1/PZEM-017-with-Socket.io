@@ -292,6 +292,7 @@ export default (props: SolarPowerProps): ReactElement => {
             percentageVal={percentageCharge}
             voltageGauge={voltageGauge}
             currentGauge={currentGauge}
+            powerGauge={powerGauge}
             temperature={temperature}
             humidity={humidity}
             deviceIpAddress={deviceIpAddress}
@@ -321,7 +322,10 @@ export default (props: SolarPowerProps): ReactElement => {
         <Col sm='9'>
           <Container>
             <Row>
-              <Col style={{ width: '100%', height: 340, marginTop: 8 }} sm='12'>
+              <Col
+                style={{ width: '100%', height: 340, marginTop: 10 }}
+                sm='12'
+              >
                 <DailyChart
                   data={batteryData}
                   title='Real time Battery Monitoring'

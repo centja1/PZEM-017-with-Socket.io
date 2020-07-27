@@ -310,6 +310,7 @@ void event(const char * payload, size_t length) {
     }
 
     if (action == "ENERGY_RESET") {
+      actionName = "Energy Reset";
       pzem.resetEnergy();
     }
 
@@ -459,10 +460,13 @@ void actionCommand(String action, String payload, String messageInfo, bool isAut
   }
 
   if (action == "ENERGY_RESET") {
+    actionName = "Energy Reset";
+    isSendNotify = true;
     pzem.resetEnergy();
   }
 
   if (actionName != "") {
+
     checkCurrentStatus(isSendNotify);
 
     String relayStatus = String((payload == "state:on") ? "เปิด" : "ปิด");
@@ -545,7 +549,6 @@ void setup_Wifi() {
     Serial.print(".");
     oled.putString(".");
   }
-
 
   oled.clearDisplay();
 
