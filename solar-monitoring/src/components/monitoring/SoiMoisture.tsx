@@ -293,9 +293,18 @@ const SoiMoisture = (props: SoiMoistureProps) => {
                 a 15.9155 15.9155 0 0 1 0 31.831
                 a 15.9155 15.9155 0 0 1 0 -31.831'
               />
+              {temperature && (
+                <text
+                  x='15'
+                  y='10'
+                  style={{ fill: 'yellow', fontSize: '0.14em' }}
+                >
+                  {temperature} C&deg;
+                </text>
+              )}
               <text
                 x='18'
-                y='18.35'
+                y='20.35'
                 className='percentage'
                 style={{ fontSize: '0.7em' }}
               >

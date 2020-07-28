@@ -46,7 +46,7 @@ const CircularChart = (props: DayFlagProps) => {
             ' A'}
         </text>
         {props.powerGauge && (
-          <text x='13' y='28' style={{ fill: 'white', fontSize: '0.16em' }}>
+          <text x='13' y='28.5' style={{ fill: 'white', fontSize: '0.16em' }}>
             {props.powerGauge.toFixed(2)} W
           </text>
         )}

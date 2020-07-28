@@ -1,6 +1,7 @@
-import React, { ReactElement } from 'react';
+import React, { ReactElement, useState } from 'react';
 import { ResponsiveLine } from '@nivo/line';
 import { ChartModel } from '../../typings/chartModel';
+
 interface DailyChartProps {
   data: ChartModel[];
   title: string;
@@ -45,12 +46,124 @@ const DailyChart = (props: DailyChartProps): ReactElement => {
     );
   };
 
+  const [chartItemDisplay, setChartItemDisplay] = useState({
+    volts: true,
+    current: true,
+    power: true,
+    moisture: true,
+    temperature: true,
+    humidity: true,
+  });
+
+  const handleChangeChk = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let chartItems = { ...chartItemDisplay };
+    let { id, checked } = e.target;
+    if (id === 'volts') chartItems.volts = checked;
+    else if (id === 'current') chartItems.current = checked;
+    else if (id === 'power') chartItems.power = checked;
+    else if (id === 'moisture') chartItems.moisture = checked;
+    else if (id === 'temperature') chartItems.temperature = checked;
+    else if (id === 'humidity') chartItems.humidity = checked;
+    setChartItemDisplay(chartItems);
+  };
+
+  const chartData = () => {
+    let response: any = [];
+    props.data?.forEach((data) => {
+      let title =
+        data.id.split(' ').length > 1 ? data.id.split(' ')[0] : data.id;
+
+      switch (title) {
+        case 'volts':
+          if (chartItemDisplay.volts) {
+            response.push({
+              ...data,
+            });
+          }
+          break;
+        case 'current':
+          if (chartItemDisplay.current) {
+            response.push({
+              ...data,
+            });
+          }
+          break;
+        case 'power':
+          if (chartItemDisplay.power) {
+            response.push({
+              ...data,
+            });
+          }
+          break;
+        case 'moisture':
+          if (chartItemDisplay.moisture) {
+            response.push({
+              ...data,
+            });
+          }
+          break;
+        case 'temperature':
+          if (chartItemDisplay.temperature) {
+            response.push({
+              ...data,
+            });
+          }
+          break;
+        case 'humidity':
+          if (chartItemDisplay.humidity) {
+            response.push({
+              ...data,
+            });
+          }
+          break;
+      }
+    });
+    return response;
+  };
+
+  const capitalize = (s: string) => {
+    if (typeof s !== 'string') return '';
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  };
+
   return (
     <>
-      <strong style={{ textAlign: 'center' }}>{props.title}</strong>
+      <div>
+        <strong>{props.title}</strong>
+      </div>
+      <div
+        style={{
+          //float: 'right',
+          //marginLeft: '45px',
+          display: 'inline-flex',
+        }}
+      >
+        {props.data.map((d, index) => {
+          let title =
+            d.id.split(' ').length > 1
+              ? d.id.split(' ')[0].trim()
+              : d.id.trim();
+
+          return (
+            <div key={index}>
+              <input
+                id={title}
+                key={'cbx_' + index}
+                type='checkbox'
+                defaultChecked={true}
+                onChange={handleChangeChk}
+                style={{ marginRight: '5px' }}
+              />
+              <span key={'sp_' + index} style={{ marginRight: '5px' }}>
+                {capitalize(title)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
 
       <ResponsiveLine
-        data={props.data}
+        data={chartData()}
         margin={{
           top: 10,
           right: 110,
