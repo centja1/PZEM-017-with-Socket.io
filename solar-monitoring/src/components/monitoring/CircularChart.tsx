@@ -39,14 +39,14 @@ const CircularChart = (props: DayFlagProps) => {
         <text x='18' y='20.35' className='percentage'>
           {props.percentageVal.toFixed(1) + '%'}
         </text>
-        <text x='9' y='25' style={{ fill: 'white', fontSize: '0.16em' }}>
+        <text x='9' y='25' style={{ fill: 'yellow', fontSize: '0.15em' }}>
           {props.voltageGauge.toFixed(2) +
             ' V / ' +
             props.currentGauge.toFixed(2) +
             ' A'}
         </text>
         {props.powerGauge && (
-          <text x='13' y='28.5' style={{ fill: 'white', fontSize: '0.16em' }}>
+          <text x='13' y='28.5' style={{ fill: 'yellow', fontSize: '0.15em' }}>
             {props.powerGauge.toFixed(2)} W
           </text>
         )}
