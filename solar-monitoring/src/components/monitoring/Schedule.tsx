@@ -133,15 +133,12 @@ const Schedule = (props: ScheduleProps) => {
                           : 'warning'
                       }
                     >
-                      <Col sm='4' style={{ float: 'left', textAlign: 'left' }}>
+                      <div style={{ float: 'left', textAlign: 'left' }}>
                         <Badge style={{ marginRight: 2 }}>{v.state}</Badge>
                         <b>{v.time}</b>
-                      </Col>
+                      </div>
 
-                      <Col
-                        sm='8'
-                        style={{ float: 'right', textAlign: 'right' }}
-                      >
+                      <div style={{ float: 'right', textAlign: 'right' }}>
                         {(v.delay || v.delay !== 0) && (
                           <Badge
                             color='danger'
@@ -182,7 +179,7 @@ const Schedule = (props: ScheduleProps) => {
                           size='lg'
                           style={{ paddingLeft: 4 }}
                         />
-                      </Col>
+                      </div>
                     </ListGroupItem>
                   ))}
               </ListGroup>
