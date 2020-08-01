@@ -5,8 +5,9 @@ import {
   faWater,
   faCheckCircle,
   faSyncAlt,
-  faTint,
   faCannabis,
+  faLightbulb,
+  faFaucet,
 } from '@fortawesome/free-solid-svg-icons';
 
 //init module
@@ -56,6 +57,7 @@ const SoiMoisture = (props: SoiMoistureProps) => {
   const [waterFallPumpSwitch, setWaterFallPumpSwitch] = useState(false);
   const [waterThePlantsSwitch, setWaterThePlantsSwitch] = useState(false);
   const [waterSprinkler, setWaterSprinkler] = useState(false);
+  const [gardenLight, setGardenLight] = useState(false);
 
   const [disableBtnWaterFallPumpSw, setDisableBtnWaterFallPumpSw] = useState(
     false
@@ -66,6 +68,7 @@ const SoiMoisture = (props: SoiMoistureProps) => {
   const [disableBtnWaterSprinklerSw, setDisableBtnWaterSprinklerSw] = useState(
     false
   );
+  const [disableBtnGardenLightSw, setDisableBtnGardenLightSw] = useState(false);
 
   const [temperature, setTemperature] = useState<number>(0);
   const [humidity, setHumidity] = useState<number>(0);
@@ -102,15 +105,18 @@ const SoiMoisture = (props: SoiMoistureProps) => {
           WATER_FALL_PUMP,
           WATER_THE_PLANTS,
           WATER_SPRINKLER,
+          GARDEN_LIGHT,
         } = data.deviceState;
 
         setDeviceIpAddress(IpAddress);
         setWaterFallPumpSwitch(WATER_FALL_PUMP === 'ON');
         setWaterThePlantsSwitch(WATER_THE_PLANTS === 'ON');
         setWaterSprinkler(WATER_SPRINKLER === 'ON');
+        setGardenLight(GARDEN_LIGHT === 'ON');
 
         setDisableBtnWaterThePlansSw(false);
         setDisableBtnWaterSprinklerSw(false);
+        setDisableBtnGardenLightSw(false);
 
         //console.log(data.deviceState);
       }
@@ -188,6 +194,12 @@ const SoiMoisture = (props: SoiMoistureProps) => {
           delay: Number(formRef.current.value),
         });
         setDisableBtnWaterSprinklerSw(true);
+        break;
+      case 4:
+        broadcastData(RelaySwitch.GARDEN_LIGHT, {
+          state: !gardenLight ? 'state:on' : 'state:off',
+        });
+        setDisableBtnGardenLightSw(true);
         break;
 
       default:
@@ -270,10 +282,24 @@ const SoiMoisture = (props: SoiMoistureProps) => {
               color='success'
               style={{ margin: 5, width: 210, height: 50 }}
             >
-              Water Sprinkler <FontAwesomeIcon icon={faTint} size='lg' />
+              Water Sprinkler <FontAwesomeIcon icon={faFaucet} size='lg' />
               {Blik(waterSprinkler)}
             </Button>
           </div>
+
+          <div>
+            {/* {waterSprinkler ? "ON " : "OFF "} */}
+            <Button
+              disabled={disableBtnGardenLightSw}
+              onClick={() => handleSwitch(4)}
+              color='info'
+              style={{ margin: 5, width: 210, height: 50 }}
+            >
+              Garden Light <FontAwesomeIcon icon={faLightbulb} size='lg' />
+              {Blik(gardenLight)}
+            </Button>
+          </div>
+
           <br />
           <div style={{ color: 'white' }}>
             <strong style={{ textAlign: 'center' }}>Soil Moisture State</strong>

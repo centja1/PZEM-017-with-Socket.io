@@ -20,10 +20,9 @@ const DayFlag = (props: DayFlagProps) => {
       .toLocaleDateString('en-US', options)
       .substr(0, 3)
       .toUpperCase();
-    return `${dayName} ${d.getDate()} / ${d
-      .getFullYear()
-      .toString()
-      .substr(2, 2)}`;
+    return `${dayName} ${d.getDate()} ${d.toLocaleString('en-us', {
+      month: 'short',
+    })} ${d.getFullYear().toString()}`;
   };
 
   return (
