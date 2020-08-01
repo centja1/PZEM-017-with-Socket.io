@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faMicrochip,
   faChargingStation,
+  faChartBar,
 } from '@fortawesome/free-solid-svg-icons';
 import './monitering.css';
 
@@ -52,6 +53,21 @@ export default (): ReactElement => {
             Smart Farm
           </NavLink>
         </NavItem>
+        <NavItem>
+          <NavLink
+            className={classnames({ active: activeTab === '3' })}
+            onClick={() => {
+              toggle('3');
+            }}
+          >
+            <FontAwesomeIcon
+              icon={faChartBar}
+              size='lg'
+              style={{ marginRight: 5 }}
+            />
+            Report
+          </NavLink>
+        </NavItem>
       </Nav>
       <TabContent activeTab={activeTab}>
         <TabPane key='1' tabId='1'>
@@ -59,6 +75,9 @@ export default (): ReactElement => {
         </TabPane>
         <TabPane key='2' tabId='2'>
           <SoiMoisture deviceName='ESP8266' />
+        </TabPane>
+        <TabPane key='3' tabId='3'>
+          // TODO add report later
         </TabPane>
       </TabContent>
     </div>

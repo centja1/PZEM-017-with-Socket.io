@@ -1,5 +1,5 @@
-import React, { ReactElement, useState } from 'react';
-import { ResponsiveLine } from '@nivo/line';
+import React, { useState } from 'react';
+import { Line } from '@nivo/line';
 import { ChartModel } from '../../typings/chartModel';
 
 interface DailyChartProps {
@@ -11,41 +11,7 @@ interface DailyChartProps {
   fixedNumber?: number;
 }
 
-const DailyChart = (props: DailyChartProps): ReactElement => {
-  const Tooltip = ({ point }: any) => {
-    //const index = point.id.split(".")[1]
-    return (
-      <div
-        style={{
-          border: 'solid 1px grey',
-          padding: '9px 9px',
-          background: 'white',
-          position: 'absolute',
-          left: 5,
-          top: 20,
-          width: 150,
-        }}
-      >
-        <div
-          style={{
-            color: '#808080',
-            padding: '3px 0',
-          }}
-        >
-          <strong>Date: </strong> {point.data.xFormatted.split(' ')[0]}
-        </div>
-        <div
-          style={{
-            color: '#808080',
-            padding: '3px 0',
-          }}
-        >
-          <strong>Time: </strong> {point.data.xFormatted.split(' ')[1]}
-        </div>
-      </div>
-    );
-  };
-
+const RealTimeChart = (props: DailyChartProps) => {
   const [chartItemDisplay, setChartItemDisplay] = useState({
     volts: true,
     current: true,
@@ -65,6 +31,11 @@ const DailyChart = (props: DailyChartProps): ReactElement => {
     else if (id === 'temperature') chartItems.temperature = checked;
     else if (id === 'humidity') chartItems.humidity = checked;
     setChartItemDisplay(chartItems);
+  };
+
+  const capitalize = (s: string) => {
+    if (typeof s !== 'string') return '';
+    return s.charAt(0).toUpperCase() + s.slice(1);
   };
 
   const chartData = () => {
@@ -121,9 +92,38 @@ const DailyChart = (props: DailyChartProps): ReactElement => {
     return response;
   };
 
-  const capitalize = (s: string) => {
-    if (typeof s !== 'string') return '';
-    return s.charAt(0).toUpperCase() + s.slice(1);
+  const Tooltip = ({ point }: any) => {
+    //const index = point.id.split(".")[1]
+    return (
+      <div
+        style={{
+          border: 'solid 1px grey',
+          padding: '9px 9px',
+          background: 'white',
+          position: 'absolute',
+          left: 5,
+          top: 20,
+          width: 150,
+        }}
+      >
+        <div
+          style={{
+            color: '#808080',
+            padding: '3px 0',
+          }}
+        >
+          <strong>Date: </strong> {point.data.xFormatted.split(' ')[0]}
+        </div>
+        <div
+          style={{
+            color: '#808080',
+            padding: '3px 0',
+          }}
+        >
+          <strong>Time: </strong> {point.data.xFormatted.split(' ')[1]}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -161,8 +161,10 @@ const DailyChart = (props: DailyChartProps): ReactElement => {
           );
         })}
       </div>
-
-      <ResponsiveLine
+      <Line
+        width={1100}
+        height={330}
+        //margin={{ top: 30, right: 50, bottom: 60, left: 50 }}
         data={chartData()}
         margin={{
           top: 10,
@@ -170,7 +172,7 @@ const DailyChart = (props: DailyChartProps): ReactElement => {
           bottom: 70,
           left: 60,
         }}
-        //xFormat='time:%Y-%m-%d %H:%M %S'
+        xFormat='time:%Y-%m-%d %H:%M %S'
         xScale={{
           type: 'time',
           format: '%Y-%m-%d %H:%M %S',
@@ -203,6 +205,7 @@ const DailyChart = (props: DailyChartProps): ReactElement => {
             // if (Math.floor(e) != e) {
             //   return;
             // }
+
             return props.isDecimalFormat
               ? parseFloat(e).toFixed(props.fixedNumber)
               : parseFloat(e);
@@ -269,8 +272,8 @@ const DailyChart = (props: DailyChartProps): ReactElement => {
   );
 };
 
-DailyChart.defaultProps = {
+RealTimeChart.defaultProps = {
   fixedNumber: 2,
 };
 
-export default DailyChart;
+export default RealTimeChart;

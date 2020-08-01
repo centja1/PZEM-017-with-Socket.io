@@ -322,16 +322,13 @@ export default (props: SolarPowerProps): ReactElement => {
         <Col sm='9'>
           <Container>
             <Row>
-              <Col
-                style={{ width: '100%', height: 340, marginTop: 10 }}
-                sm='12'
-              >
+              <Col style={{ width: '100%', height: 340, marginTop: 7 }} sm='12'>
                 <DailyChart
                   data={batteryData}
                   title='Real time Battery Monitoring'
                   legend='Solar Power'
                   colors='category10'
-                  isDecimalFormat={true}
+                  isDecimalFormat={false}
                 />
               </Col>
             </Row>
