@@ -26,6 +26,7 @@ import { AppConfig, RelaySwitch } from '../../constants/Constants';
 import { ChartModel, ChartSeries } from '../../typings/chartModel';
 import { LogData } from '../../typings/logData';
 import { powerData } from '../../typings/powerData';
+import { isMobile } from 'react-device-detect';
 
 interface SolarPowerProps {
   deviceName: string;
@@ -140,7 +141,7 @@ export default (props: SolarPowerProps): ReactElement => {
     broadcastData(RelaySwitch.CHECKING, '');
   }, []);
 
-  const maxArr = 6;
+  const maxArr = isMobile ? 4 : 7;
   const maxBatteryLevel = 13.3;
   const minBatteryLevel = 10.5;
   useEffect(() => {
@@ -324,8 +325,9 @@ export default (props: SolarPowerProps): ReactElement => {
         <Col sm='9'>
           <Container>
             <Row>
-              <Col style={{ width: '100%', height: 340, marginTop: 7 }} sm='12'>
+              <Col style={{ width: '100%', height: 310, marginTop: 7 }} sm='12'>
                 <DailyChart
+                  key='solarpower'
                   data={batteryData}
                   title='Real time Battery Monitoring'
                   legend='Solar Power'

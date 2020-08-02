@@ -7,6 +7,7 @@ import { powerData } from '../../typings/powerData';
 import { db } from '../../config';
 import { AppConfig } from '../../constants/Constants';
 import { ReduceData } from '../../utils/ReduceMessage';
+import { isMobile } from 'react-device-detect';
 
 const Reports = () => {
   const [deviceData, setDeviceData] = useState<powerData>();
@@ -49,7 +50,7 @@ const Reports = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const maxArr = 6;
+  const maxArr = isMobile ? 4 : 7;
   useEffect(() => {
     const currTime = moment.utc().format(AppConfig.dateFormat);
     let chartData = [...batteryData];
@@ -98,6 +99,7 @@ const Reports = () => {
       <Row>
         <Col style={{ width: '100%', height: 310, marginTop: 7 }} sm='12'>
           <DailyChart
+            key='report'
             data={batteryData}
             title='Real time Battery Monitoring'
             legend='Solar Power'

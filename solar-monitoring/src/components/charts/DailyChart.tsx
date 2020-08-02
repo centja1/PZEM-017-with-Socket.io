@@ -1,8 +1,10 @@
 import React, { ReactElement, useState } from 'react';
 import { ResponsiveLine } from '@nivo/line';
+import moment from 'moment';
 import { ChartModel } from '../../typings/chartModel';
 
 interface DailyChartProps {
+  key: string;
   data: ChartModel[];
   title: string;
   legend: string;
@@ -12,35 +14,42 @@ interface DailyChartProps {
 }
 
 const DailyChart = (props: DailyChartProps): ReactElement => {
+  // useEffect(() => {
+  //   console.log('data:', props.data);
+  // }, [props.data]);
+
   const Tooltip = ({ point }: any) => {
-    //const index = point.id.split(".")[1]
+    const {
+      serieId,
+      serieColor,
+      data: { yFormatted, xFormatted },
+    } = point;
+    //debugger;
     return (
       <div
         style={{
-          border: 'solid 1px grey',
-          padding: '9px 9px',
           background: 'white',
-          position: 'absolute',
-          left: 5,
-          top: 20,
-          width: 150,
+          padding: '9px 12px',
+          border: '1px solid #ccc',
         }}
       >
         <div
           style={{
-            color: '#808080',
+            color: serieColor,
             padding: '3px 0',
           }}
         >
-          <strong>Date: </strong> {point.data.xFormatted.split(' ')[0]}
+          <strong>{serieId}: </strong>
+          {yFormatted}
         </div>
         <div
           style={{
-            color: '#808080',
+            color: serieColor,
             padding: '3px 0',
           }}
         >
-          <strong>Time: </strong> {point.data.xFormatted.split(' ')[1]}
+          <strong>Time: </strong>
+          {moment(xFormatted).format('HH:mm ss')}
         </div>
       </div>
     );
@@ -163,6 +172,7 @@ const DailyChart = (props: DailyChartProps): ReactElement => {
       </div>
 
       <ResponsiveLine
+        key={props.key}
         data={chartData()}
         margin={{
           top: 10,
@@ -179,7 +189,12 @@ const DailyChart = (props: DailyChartProps): ReactElement => {
         yScale={{ type: 'linear', min: 'auto', max: 'auto' }}
         //curve='linear'
         curve='monotoneX'
-        enableArea={true}
+        lineWidth={3}
+        enableArea={false}
+        enablePoints={true}
+        enablePointLabel={false} //Show value on point
+        enableGridX={true}
+        enableGridY={true}
         axisTop={null}
         axisRight={null}
         axisBottom={{
@@ -208,7 +223,7 @@ const DailyChart = (props: DailyChartProps): ReactElement => {
               : parseFloat(e);
           },
           legend: props.legend,
-          legendOffset: -40,
+          legendOffset: -45,
           legendPosition: 'middle',
         }}
         colors={{ scheme: props.colors }}
@@ -222,7 +237,7 @@ const DailyChart = (props: DailyChartProps): ReactElement => {
         animate={false}
         motionStiffness={120}
         motionDamping={50}
-        isInteractive={false}
+        isInteractive={true}
         enableSlices={false}
         useMesh={true}
         tooltip={Tooltip}
@@ -256,7 +271,7 @@ const DailyChart = (props: DailyChartProps): ReactElement => {
           'grid',
           'markers',
           'axes',
-          //Area,
+          'areas',
           //'crosshair',
           'lines',
           'points',

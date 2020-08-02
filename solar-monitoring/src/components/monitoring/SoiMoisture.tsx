@@ -25,6 +25,7 @@ import { ChartModel } from '../../typings/chartModel';
 import { LogData } from '../../typings/logData';
 import FormInput from './FormInput';
 import Schedule from './Schedule';
+import { isMobile } from 'react-device-detect';
 
 interface SoiMoistureProps {
   deviceName: string;
@@ -131,7 +132,7 @@ const SoiMoisture = (props: SoiMoistureProps) => {
     broadcastData(RelaySwitch.CHECKING, '');
   }, []);
 
-  const maxArr = 6;
+  const maxArr = isMobile ? 4 : 7;
   useEffect(() => {
     let chartData = [...soilMoistureData];
     if (deviceData.soilMoistureRaw) {
@@ -385,10 +386,11 @@ const SoiMoisture = (props: SoiMoistureProps) => {
           <Container>
             <Row>
               <Col
-                style={{ width: '100%', height: 340, marginTop: 10 }}
+                style={{ width: '100%', height: 310, marginTop: 10 }}
                 sm='12'
               >
                 <DailyChart
+                  key='soilmoisture'
                   data={soilMoistureData}
                   title='Smart Garden with IoT Plant Monitoring System'
                   legend='Sensor data'
