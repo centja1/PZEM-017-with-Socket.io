@@ -96,7 +96,7 @@ const Reports = () => {
   return (
     <div>
       <Row>
-        <Col style={{ width: '100%', height: 400, marginTop: 7 }} sm='12'>
+        <Col style={{ width: '100%', height: 310, marginTop: 7 }} sm='12'>
           <DailyChart
             data={batteryData}
             title='Real time Battery Monitoring'
