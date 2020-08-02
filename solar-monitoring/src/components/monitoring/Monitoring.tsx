@@ -3,6 +3,7 @@ import { NavLink, TabContent, TabPane, Nav, NavItem } from 'reactstrap';
 import classnames from 'classnames';
 import SolarPower from './SolarPower';
 import SoiMoisture from './SoiMoisture';
+import Reports from '../reports/Reports';
 import { Storage } from '../../utils/Storage';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -77,7 +78,7 @@ export default (): ReactElement => {
           <SoiMoisture deviceName='ESP8266' />
         </TabPane>
         <TabPane key='3' tabId='3'>
-          // TODO add report later
+          <Reports />
         </TabPane>
       </TabContent>
     </div>
