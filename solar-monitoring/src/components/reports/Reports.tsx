@@ -1,20 +1,46 @@
 import React, { useState, useEffect } from 'react';
+import { Row, Col } from 'reactstrap';
+import moment from 'moment';
+import DailyChart from '../charts/DailyChart';
+import { ChartModel, ChartSeries } from '../../typings/chartModel';
+import { powerData } from '../../typings/powerData';
 import { db } from '../../config';
+import { AppConfig } from '../../constants/Constants';
+import { ReduceData } from '../../utils/ReduceMessage';
 
 const Reports = () => {
-  const [data, setData] = useState<any>([]);
-  let b: any = [];
+  const [deviceData, setDeviceData] = useState<powerData>();
+  const [batteryData, setBatteryData] = useState<ChartModel[]>([
+    {
+      id: 'power (W)',
+      color: 'hsl(226, 70%, 50%)',
+      data: [],
+    },
+    {
+      id: 'current (A)',
+      color: 'hsl(298, 70%, 50%)',
+      data: [],
+    },
+    {
+      id: 'volts (V)',
+      color: 'hsl(157, 70%, 50%)',
+      data: [],
+    },
+  ]);
 
   const firebaseInitial = () => {
     var app = db.ref('data').limitToLast(1);
     app.on('child_added', function (snapshot) {
-      //b.push(snapshot.val());
-      setData([...b]);
+      const deviceData = snapshot.val();
+      if (deviceData.sensor.voltage_usage)
+        setDeviceData({
+          voltage: deviceData.sensor.voltage_usage,
+          current: deviceData.sensor.current_usage,
+          power: deviceData.sensor.active_power,
+          energy: deviceData.sensor.active_energy,
+          time: deviceData.time,
+        });
     });
-
-    // app.once('value').then(function (snapshot) {
-    //   console.log(snapshot.val());
-    // });
   };
 
   useEffect(() => {
@@ -23,13 +49,63 @@ const Reports = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  //   useEffect(() => {
-  //     console.log('data', data.length);
-  //   }, [data]);
+  const maxArr = 6;
+  useEffect(() => {
+    const currTime = moment.utc().format(AppConfig.dateFormat);
+    let chartData = [...batteryData];
+    if (deviceData?.power) {
+      const powerIndex = 0;
+      ReduceData(maxArr, chartData[powerIndex].data);
+      chartData[powerIndex].data = [
+        ...chartData[powerIndex].data,
+        {
+          x: currTime,
+          y: deviceData.power,
+        } as ChartSeries,
+      ];
+    }
+
+    if (deviceData?.current) {
+      const currentIndex = 1;
+      ReduceData(maxArr, chartData[currentIndex].data);
+      chartData[currentIndex].data = [
+        ...chartData[currentIndex].data,
+        {
+          x: currTime,
+          y: deviceData.current,
+        } as ChartSeries,
+      ];
+    }
+
+    if (deviceData?.voltage) {
+      const voltageIndex = 2;
+      ReduceData(maxArr, chartData[voltageIndex].data);
+      chartData[voltageIndex].data = [
+        ...chartData[voltageIndex].data,
+        {
+          x: currTime,
+          y: deviceData.voltage,
+        } as ChartSeries,
+      ];
+    }
+
+    setBatteryData(chartData);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deviceData]);
 
   return (
     <div>
-      <div className='column is-3'>Time:{data.map((v: any) => v.time)}</div>
+      <Row>
+        <Col style={{ width: '100%', height: 400, marginTop: 7 }} sm='12'>
+          <DailyChart
+            data={batteryData}
+            title='Real time Battery Monitoring'
+            legend='Solar Power'
+            colors='category10'
+            isDecimalFormat={true}
+          />
+        </Col>
+      </Row>
     </div>
   );
 };

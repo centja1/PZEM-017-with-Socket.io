@@ -27,6 +27,7 @@
     "bootstrap-switch-button-react": "^1.2.0",
     "canvas-gauges": "^2.1.5",
     "classnames": "^2.2.6",
+    "firebase": "^7.17.1",
     "highcharts": "^7.2.1",
     "highcharts-react-official": "^2.2.2",
     "lodash": "^4.17.15",

@@ -104,9 +104,11 @@ export default (props: SolarPowerProps): ReactElement => {
 
         ReduceMessage(100, dataLogs);
         setLogs([...dataLogs]);
-      } else if (data.deviceState && data.deviceName === props.deviceName) {
+      }
+
+      if (data.deviceState && data.deviceName === props.deviceName) {
         const {
-          IpAddress,
+          IP_ADDRESS,
           INVERTER,
           COOLING_FAN,
           LIGHT,
@@ -114,7 +116,7 @@ export default (props: SolarPowerProps): ReactElement => {
           inverterVoltageShutdown,
           inverterVoltageStart,
         } = data.deviceState;
-        setDeviceIpAddress(IpAddress);
+        setDeviceIpAddress(IP_ADDRESS);
         setInverterSwitch(INVERTER === 'ON');
         setCoolingFans(COOLING_FAN === 'ON');
         setLightSwitch(LIGHT === 'ON');
@@ -328,7 +330,7 @@ export default (props: SolarPowerProps): ReactElement => {
                   title='Real time Battery Monitoring'
                   legend='Solar Power'
                   colors='category10'
-                  isDecimalFormat={false}
+                  isDecimalFormat={true}
                 />
               </Col>
             </Row>

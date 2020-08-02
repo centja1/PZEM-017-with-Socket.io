@@ -367,6 +367,16 @@ String createResponse(float voltage, float current, float power, float energy, u
   data["temperature"] = temperature;
   data["heatIndex"] = dht.computeHeatIndex(temperature, humidity, false);
 
+
+  JsonObject& deviceState = root.createNestedObject("deviceState");
+  deviceState["IP_ADDRESS"] = WiFi.localIP().toString();
+  deviceState["INVERTER"] = String((digitalRead(INVERTER) == LOW) ? "ON" : "OFF");
+  deviceState["COOLING_FAN"] = String((digitalRead(COOLING_FAN) == LOW) ? "ON" : "OFF");
+  deviceState["LIGHT"] = String((digitalRead(LIGHT) == LOW) ? "ON" : "OFF");
+  deviceState["SPOTLIGHT"] = String((digitalRead(SPOTLIGHT) == LOW) ? "ON" : "OFF");
+  deviceState["inverterVoltageStart"] = inverterVoltageStart;
+  deviceState["inverterVoltageShutdown"] = inverterVoltageShutdown;
+
   String output;
   root.prettyPrintTo(output);
 
@@ -495,7 +505,7 @@ void checkCurrentStatus(bool sendLineNotify) {
   //  object["SPOTLIGHT"] = String((digitalRead(SPOTLIGHT) == LOW) ? "ON" : "OFF");
   //  object["inverterVoltageStart"] = inverterVoltageStart;
   //  object["inverterVoltageShutdown"] = inverterVoltageShutdown;
-  //  object["IpAddress"] = WiFi.localIP().toString();
+  //  object["IP_ADDRESS"] = WiFi.localIP().toString();
   //  String output;
   //  serializeJson(doc, output);
 
@@ -506,13 +516,14 @@ void checkCurrentStatus(bool sendLineNotify) {
   root["lastUpdated"] = NowString();
 
   JsonObject& data = root.createNestedObject("deviceState");
+  data["IP_ADDRESS"] = WiFi.localIP().toString();
   data["INVERTER"] = String((digitalRead(INVERTER) == LOW) ? "ON" : "OFF");
   data["COOLING_FAN"] = String((digitalRead(COOLING_FAN) == LOW) ? "ON" : "OFF");
   data["LIGHT"] = String((digitalRead(LIGHT) == LOW) ? "ON" : "OFF");
   data["SPOTLIGHT"] = String((digitalRead(SPOTLIGHT) == LOW) ? "ON" : "OFF");
   data["inverterVoltageStart"] = inverterVoltageStart;
   data["inverterVoltageShutdown"] = inverterVoltageShutdown;
-  data["IpAddress"] = WiFi.localIP().toString();
+
 
   String output;
   root.prettyPrintTo(output);

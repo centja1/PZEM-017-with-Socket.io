@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClock } from '@fortawesome/free-solid-svg-icons';
 interface FormInputProps {
   formRef: any;
+  defaultValue: number;
 }
 
 const FormInput = (props: FormInputProps) => {
@@ -19,9 +20,8 @@ const FormInput = (props: FormInputProps) => {
           id='txtDelayTime'
           innerRef={props.formRef}
           style={{ marginLeft: 5 }}
-          defaultValue={20}
+          defaultValue={props.defaultValue}
         >
-          <option value={10}>10 sec</option>
           <option value={20}>20 sec</option>
           <option value={30}>30 sec</option>
           <option value={60}>1 min</option>
@@ -31,6 +31,10 @@ const FormInput = (props: FormInputProps) => {
       </FormGroup>
     </Form>
   );
+};
+
+FormInput.defaultProps = {
+  defaultValue: 20,
 };
 
 export default FormInput;

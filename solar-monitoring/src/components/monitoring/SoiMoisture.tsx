@@ -78,7 +78,7 @@ const SoiMoisture = (props: SoiMoistureProps) => {
     const cb = (data: any) => {
       // console.log('[data]:', data);
       if (data.sensor && data.deviceName === props.deviceName) {
-        const { moisture } = data.sensor;
+        const { soilMoistureRaw } = data.sensor;
         setDeviceIpAddress(data.ipAddress);
 
         dataLogs.unshift({
@@ -87,9 +87,9 @@ const SoiMoisture = (props: SoiMoistureProps) => {
           messages: JSON.stringify(data),
         } as LogData);
 
-        setSoilMoisture(moisture);
+        setSoilMoisture(soilMoistureRaw);
         setDeviceData({
-          moisture: moisture,
+          soilMoistureRaw: soilMoistureRaw,
         });
 
         ReduceMessage(100, dataLogs);
@@ -99,16 +99,17 @@ const SoiMoisture = (props: SoiMoistureProps) => {
         setHumidity(data.sensor.humidity);
         setVoltageGauge(data.sensor.voltage_usage);
         setCurrentGauge(data.sensor.current_usage);
-      } else if (data.deviceState && data.deviceName === props.deviceName) {
+      }
+
+      if (data.deviceState && data.deviceName === props.deviceName) {
         const {
-          IpAddress,
           WATER_FALL_PUMP,
           WATER_THE_PLANTS,
           WATER_SPRINKLER,
           GARDEN_LIGHT,
         } = data.deviceState;
 
-        setDeviceIpAddress(IpAddress);
+        //setDeviceIpAddress(ipAddress);
         setWaterFallPumpSwitch(WATER_FALL_PUMP === 'ON');
         setWaterThePlantsSwitch(WATER_THE_PLANTS === 'ON');
         setWaterSprinkler(WATER_SPRINKLER === 'ON');
@@ -133,14 +134,14 @@ const SoiMoisture = (props: SoiMoistureProps) => {
   const maxArr = 6;
   useEffect(() => {
     let chartData = [...soilMoistureData];
-    if (deviceData.moisture) {
+    if (deviceData.soilMoistureRaw) {
       const moistureIndex = 0;
       ReduceData(maxArr, chartData[moistureIndex].data);
       chartData[moistureIndex].data = [
         ...chartData[moistureIndex].data,
         {
           x: moment.utc().format(AppConfig.dateFormat),
-          y: deviceData.moisture,
+          y: deviceData.soilMoistureRaw,
         },
       ];
     }
@@ -398,7 +399,7 @@ const SoiMoisture = (props: SoiMoistureProps) => {
             </Row>
             <Row>
               <Col sm='5' style={{ textAlign: 'center' }}>
-                <FormInput formRef={formRef} />
+                <FormInput formRef={formRef} defaultValue={30} />
                 <br />
                 <Schedule />
                 <br />

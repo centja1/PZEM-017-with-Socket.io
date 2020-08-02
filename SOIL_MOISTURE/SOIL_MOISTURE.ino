@@ -78,6 +78,7 @@ void setup() {
 }
 
 int moisVal = 0;
+int soilMoistureReal = 0;
 void loop() {
 
   time_t now = time(nullptr);
@@ -94,21 +95,21 @@ void loop() {
   // 07:00
   if (p_tm->tm_hour == 7 && p_tm->tm_min == 0 && p_tm->tm_sec == 0 && moisVal > 380) {
     digitalWrite(WATER_SPRINKLER, LOW);
-    checkCurrentStatus(false);
+    checkCurrentStatus(true);
     task1.in(1000 * 30, stopWaterSpringkler);
   }
 
   // 12:00
   if (p_tm->tm_hour == 12 && p_tm->tm_min == 0 && p_tm->tm_sec == 0 && moisVal > 380) {
     digitalWrite(WATER_SPRINKLER, LOW);
-    checkCurrentStatus(false);
+    checkCurrentStatus(true);
     task1.in(1000 * 30, stopWaterSpringkler);
   }
 
   // 17:00
   if (p_tm->tm_hour == 17 && p_tm->tm_min == 0 && p_tm->tm_sec == 0 && moisVal > 380) {
     digitalWrite(WATER_SPRINKLER, LOW);
-    checkCurrentStatus(false);
+    checkCurrentStatus(true);
     task1.in(1000 * 30, stopWaterSpringkler);
   }
 
@@ -117,14 +118,14 @@ void loop() {
   // 07:30
   if (p_tm->tm_hour == 7 && p_tm->tm_min == 30 && p_tm->tm_sec == 0 && moisVal > 380) {
     digitalWrite(WATER_THE_PLANTS, LOW);
-    checkCurrentStatus(false);
+    checkCurrentStatus(true);
     task2.in(1000 * 30, stopWaterThePlants);
   }
 
   // 17:30
   if (p_tm->tm_hour == 17 && p_tm->tm_min == 30 && p_tm->tm_sec == 0 && moisVal > 380) {
     digitalWrite(WATER_THE_PLANTS, LOW);
-    checkCurrentStatus(false);
+    checkCurrentStatus(true);
     task2.in(1000 * 30, stopWaterThePlants);
   }
 
@@ -136,6 +137,7 @@ void loop() {
 
 bool readSoilMoistureSensor(void *) {
   moisVal = analogRead(ANALOG_PIN);
+  soilMoistureReal =  map(moisVal, 1023, 0, 0, 100);
   if (moisVal > 0) {
     createResponse(moisVal);
   }
@@ -153,23 +155,28 @@ String createResponse(float value) {
   root["ipAddress"] = WiFi.localIP().toString();
 
   JsonObject& data = root.createNestedObject("sensor");
-  data["moisture"] = value;
+  data["soilMoistureRaw"] = value;
+  data["soilMoistureReal"] = soilMoistureReal;
+
+  JsonObject& deviceState = root.createNestedObject("deviceState");
+  deviceState["WATER_THE_PLANTS"] = String((digitalRead(WATER_THE_PLANTS) == LOW) ? "ON" : "OFF");
+  deviceState["WATER_SPRINKLER"] = String((digitalRead(WATER_SPRINKLER) == LOW) ? "ON" : "OFF");
 
   if (value > 30) {
-    if (moisVal >= 1000) {
+    if (value >= 1000) {
       printMessage("Sensor is not in the Soil or DISCONNECTED", true);
     }
 
-    if (moisVal < 1000 && moisVal >= 600) {
-      printMessage("Soil is DRY (" + String(moisVal) + ")", true);
+    if (value < 1000 && value >= 600) {
+      printMessage("Soil is DRY (" + String(value) + ")", true);
     }
 
-    if (moisVal < 600  && moisVal >= 370) {
-      printMessage("Soil is HUMID (" + String(moisVal) + ")", true);
+    if (value < 600  && value >= 370) {
+      printMessage("Soil is HUMID (" + String(value) + ")", true);
     }
 
-    if (moisVal < 370) {
-      printMessage("Sensor in WATER (" + String(moisVal) + ")", true);
+    if (value < 370) {
+      printMessage("Sensor in WATER (" + String(value) + ")", true);
     }
   }
 
