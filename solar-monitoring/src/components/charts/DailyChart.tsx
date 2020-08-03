@@ -4,7 +4,6 @@ import moment from 'moment';
 import { ChartModel } from '../../typings/chartModel';
 
 interface DailyChartProps {
-  key: string;
   data: ChartModel[];
   title: string;
   legend: string;
@@ -172,7 +171,6 @@ const DailyChart = (props: DailyChartProps): ReactElement => {
       </div>
 
       <ResponsiveLine
-        key={props.key}
         data={chartData()}
         margin={{
           top: 10,
@@ -187,7 +185,6 @@ const DailyChart = (props: DailyChartProps): ReactElement => {
           precision: 'second', // 'millisecond' | 'second' | 'minute' | 'hour' | 'month' | 'year' | 'day'
         }}
         yScale={{ type: 'linear', min: 'auto', max: 'auto' }}
-        //curve='linear'
         curve='monotoneX'
         lineWidth={3}
         enableArea={false}

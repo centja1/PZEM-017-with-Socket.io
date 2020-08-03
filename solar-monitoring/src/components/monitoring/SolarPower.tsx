@@ -325,7 +325,15 @@ export default (props: SolarPowerProps): ReactElement => {
         <Col sm='9'>
           <Container>
             <Row>
-              <Col style={{ width: '100%', height: 310, marginTop: 7 }} sm='12'>
+              <Col
+                style={{
+                  width: '100%',
+                  height: 310,
+                  marginTop: 7,
+                  marginBottom: 10,
+                }}
+                sm='12'
+              >
                 <DailyChart
                   key='solarpower'
                   data={batteryData}

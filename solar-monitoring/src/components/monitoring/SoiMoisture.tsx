@@ -386,7 +386,12 @@ const SoiMoisture = (props: SoiMoistureProps) => {
           <Container>
             <Row>
               <Col
-                style={{ width: '100%', height: 310, marginTop: 10 }}
+                style={{
+                  width: '100%',
+                  height: 310,
+                  marginTop: 10,
+                  marginBottom: 20,
+                }}
                 sm='12'
               >
                 <DailyChart
