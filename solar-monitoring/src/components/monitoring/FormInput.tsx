@@ -22,10 +22,14 @@ const FormInput = (props: FormInputProps) => {
           style={{ marginLeft: 5 }}
           defaultValue={props.defaultValue}
         >
+          <option value={10}>10 sec</option>
           <option value={20}>20 sec</option>
           <option value={30}>30 sec</option>
+          <option value={40}>40 sec</option>
+          <option value={50}>50 sec</option>
           <option value={60}>1 min</option>
           <option value={120}>2 min</option>
+          <option value={180}>3 min</option>
           <option value={300}>5 min</option>
         </Input>
       </FormGroup>

@@ -93,40 +93,40 @@ void loop() {
 
   //Vegetable gardenVegetable garden (Auto stop within 30 sec)
   // 07:00
-  if (p_tm->tm_hour == 7 && p_tm->tm_min == 0 && p_tm->tm_sec == 0 && moisVal > 380) {
+  if (p_tm->tm_hour == 7 && p_tm->tm_min == 1 && p_tm->tm_sec == 0 && moisVal > 380) {
     digitalWrite(WATER_SPRINKLER, LOW);
     checkCurrentStatus(true);
-    task1.in(1000 * 30, stopWaterSpringkler);
+    task1.in(1000 * 40, stopWaterSpringkler);
   }
 
   // 12:00
   if (p_tm->tm_hour == 12 && p_tm->tm_min == 0 && p_tm->tm_sec == 0 && moisVal > 380) {
     digitalWrite(WATER_SPRINKLER, LOW);
     checkCurrentStatus(true);
-    task1.in(1000 * 30, stopWaterSpringkler);
+    task1.in(1000 * 40, stopWaterSpringkler);
   }
 
   // 17:00
-  if (p_tm->tm_hour == 17 && p_tm->tm_min == 0 && p_tm->tm_sec == 0 && moisVal > 380) {
+  if (p_tm->tm_hour == 17 && p_tm->tm_min == 1 && p_tm->tm_sec == 0 && moisVal > 380) {
     digitalWrite(WATER_SPRINKLER, LOW);
     checkCurrentStatus(true);
-    task1.in(1000 * 30, stopWaterSpringkler);
+    task1.in(1000 * 40, stopWaterSpringkler);
   }
 
 
   // Water the plants  (Auto stop within 30 sec)
-  // 07:30
-  if (p_tm->tm_hour == 7 && p_tm->tm_min == 30 && p_tm->tm_sec == 0 && moisVal > 380) {
+  // 07:00
+  if (p_tm->tm_hour == 7 && p_tm->tm_min == 0 && p_tm->tm_sec == 0 && moisVal > 380) {
     digitalWrite(WATER_THE_PLANTS, LOW);
     checkCurrentStatus(true);
-    task2.in(1000 * 30, stopWaterThePlants);
+    task2.in(1000 * 60, stopWaterThePlants);
   }
 
-  // 17:30
-  if (p_tm->tm_hour == 17 && p_tm->tm_min == 30 && p_tm->tm_sec == 0 && moisVal > 380) {
+  // 17:00
+  if (p_tm->tm_hour == 17 && p_tm->tm_min == 0 && p_tm->tm_sec == 0 && moisVal > 380) {
     digitalWrite(WATER_THE_PLANTS, LOW);
     checkCurrentStatus(true);
-    task2.in(1000 * 30, stopWaterThePlants);
+    task2.in(1000 * 60, stopWaterThePlants);
   }
 
   webSocket.loop();
@@ -207,7 +207,6 @@ void event(const char * payload, size_t length) {
       actionName = "Water Sprinkler";
       if (state == "state:on") {
         digitalWrite(WATER_SPRINKLER, LOW);
-        checkCurrentStatus(false);
         task1.in(1000 * delayTime, stopWaterSpringkler);
       }
       else {
@@ -219,7 +218,6 @@ void event(const char * payload, size_t length) {
       actionName = "Water The Plants";
       if (state == "state:on") {
         digitalWrite(WATER_THE_PLANTS, LOW);
-        checkCurrentStatus(false);
         task2.in(1000 * delayTime, stopWaterThePlants);
       } else {
         digitalWrite(WATER_THE_PLANTS, HIGH);
@@ -231,12 +229,13 @@ void event(const char * payload, size_t length) {
     }
 
     if (actionName != "") {
-      checkCurrentStatus(true);
+      checkCurrentStatus(false);
 
       String relayStatus = String((state == "state:on") ? "เปิด" : "ปิด");
       String msq = (messageInfo != "") ? messageInfo : "";
       msq += "\r\n===============\r\n- Relay Switch Status -\r\n" + actionName + ": " + relayStatus;
       msq += (isAuto) ? " (Auto)" : " (Manual)";
+      msq += "\r\nDelayTime: " + String(delayTime) + " seconds";
       Line_Notify(msq);
       Serial.println("[" + actionName + "]: " + relayStatus);
     }
