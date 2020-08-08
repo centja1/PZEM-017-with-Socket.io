@@ -223,7 +223,7 @@ const SoiMoisture = (props: SoiMoistureProps) => {
     } else if (moisVal < 370 && moisVal >= 20) {
       msg = 'Sensor in WATER';
       color = 'white';
-    } else if (moisVal < 10) {
+    } else if (moisVal < 10 && moisVal > 0) {
       msg = 'Sensor is not in the Soil or DISCONNECTED';
       color = 'red';
     }
