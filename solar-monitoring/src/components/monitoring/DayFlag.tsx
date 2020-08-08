@@ -47,9 +47,9 @@ const DayFlag = (props: DayFlagProps) => {
         style={{
           float: 'left',
           display: 'inline',
-          textAlign: size.width > 427 ? 'center' : 'left',
+          textAlign: size.width > 427 || size.width <= 360 ? 'center' : 'left',
           fontWeight: 'bold',
-          fontSize: size.width > 427 ? '8pt' : 'smaller',
+          fontSize: size.width > 427 || size.width <= 360 ? '8pt' : 'smaller',
           marginLeft: 3,
         }}
       >
