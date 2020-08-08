@@ -12,6 +12,7 @@ interface CustomButtonProps {
   flagStatus: boolean;
   color: string;
   width: number;
+  isBlik: boolean;
 }
 
 const CustomButton = (props: CustomButtonProps) => {
@@ -20,11 +21,20 @@ const CustomButton = (props: CustomButtonProps) => {
       disabled={props.disabled}
       onClick={props.onClick}
       color={props.color}
-      style={{ margin: 5, width: props.width, height: 50 }}
+      style={{
+        marginBottom: 5,
+        marginTop: 5,
+        marginLeft: 2,
+        width: props.width,
+        height: 50,
+      }}
     >
-      <div style={{ float: 'left' }}>{Blik(props.flagStatus)}</div>
+      {props.isBlik && (
+        <div style={{ float: 'left' }}>{Blik(props.flagStatus)}</div>
+      )}
+
       {props.title}
-      <div style={{ float: 'right', marginRight: 5 }}>
+      <div style={{ float: 'right', marginRight: 2 }}>
         <FontAwesomeIcon icon={props.icon} size='lg' />
       </div>
     </Button>
@@ -32,7 +42,9 @@ const CustomButton = (props: CustomButtonProps) => {
 };
 
 CustomButton.defaultProps = {
-  width: 215,
+  width: 210,
+  isBlik: true,
+  flagStatus: false,
 };
 
 export default CustomButton;

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Container, Row, Col, Button } from 'reactstrap';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Container, Row, Col } from 'reactstrap';
 import {
   faWater,
   faCheckCircle,
@@ -26,6 +25,7 @@ import FormInput from './FormInput';
 import Schedule from './Schedule';
 import { isMobile } from 'react-device-detect';
 import CustomButton from './CustomButton';
+import useWindowSize from '../hooks/useWindowSize';
 
 interface SoiMoistureProps {
   deviceName: string;
@@ -239,6 +239,7 @@ const SoiMoisture = (props: SoiMoistureProps) => {
     );
   };
 
+  const size = useWindowSize();
   return (
     <>
       <Row>
@@ -355,23 +356,23 @@ const SoiMoisture = (props: SoiMoistureProps) => {
             </div>
           </div>
           <div>
-            <Button
+            <CustomButton
+              title='Check'
+              isBlik={false}
               onClick={() => broadcastData(RelaySwitch.CHECKING, '')}
+              icon={faCheckCircle}
               color='secondary'
-              style={{ margin: 5, width: 200, height: 50 }}
-            >
-              Check <FontAwesomeIcon icon={faCheckCircle} size='lg' />
-            </Button>
+            />
           </div>
 
-          <div>
-            <Button
+          <div style={{ marginBottom: 37 }}>
+            <CustomButton
+              title='Energy Reset'
+              isBlik={false}
               onClick={() => broadcastData(RelaySwitch.RESET_ENERGY, '')}
+              icon={faSyncAlt}
               color='danger'
-              style={{ margin: 5, width: 200, height: 50 }}
-            >
-              Energy Reset <FontAwesomeIcon icon={faSyncAlt} size='lg' />
-            </Button>
+            />
           </div>
         </Col>
         <Col sm='9'>
@@ -397,13 +398,19 @@ const SoiMoisture = (props: SoiMoistureProps) => {
               </Col>
             </Row>
             <Row>
-              <Col sm='5' style={{ textAlign: 'center' }}>
+              <Col
+                sm={size.width < 407 ? '5' : '7'}
+                style={{ textAlign: 'center' }}
+              >
                 <FormInput formRef={formRef} defaultValue={30} />
                 <br />
                 <Schedule />
                 <br />
               </Col>
-              <Col sm='7' style={{ textAlign: 'center' }}>
+              <Col
+                sm={size.width < 407 ? '7' : '5'}
+                style={{ textAlign: 'center' }}
+              >
                 <Gauge
                   chartTitle='Soil Moisture'
                   min={0}

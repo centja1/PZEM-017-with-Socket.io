@@ -2,6 +2,7 @@ import React from 'react';
 import './monitering.css';
 import Sunny from '../../assets/images/svg/sunny.svg';
 import Cloudy from '../../assets/images/svg/cloudy.svg';
+import useWindowSize from '../hooks/useWindowSize';
 
 interface DayFlagProps {
   temperature: number;
@@ -24,6 +25,7 @@ const DayFlag = (props: DayFlagProps) => {
       month: 'short',
     })} ${d.getFullYear().toString()}`;
   };
+  const size = useWindowSize();
 
   return (
     <div style={{ textAlign: 'center', marginBottom: '40px' }}>
@@ -41,14 +43,13 @@ const DayFlag = (props: DayFlagProps) => {
           style={{ height: 76.7, width: 67.7 }}
         />
       </div>
-
       <div
         style={{
           float: 'left',
           display: 'inline',
-          textAlign: 'left',
+          textAlign: size.width > 427 ? 'center' : 'left',
           fontWeight: 'bold',
-          fontSize: 'smaller',
+          fontSize: size.width > 427 ? '8pt' : 'smaller',
           marginLeft: 3,
         }}
       >
@@ -63,5 +64,8 @@ const DayFlag = (props: DayFlagProps) => {
     </div>
   );
 };
+
+//H: 911x383
+//V: 427x887
 
 export default DayFlag;

@@ -12,6 +12,7 @@ import {
   faChartBar,
 } from '@fortawesome/free-solid-svg-icons';
 import './monitering.css';
+import useWindowSize from '../hooks/useWindowSize';
 
 export default (): ReactElement => {
   const [activeTab, setActiveTab] = useState(Storage.getActiveTab());
@@ -20,7 +21,8 @@ export default (): ReactElement => {
     Storage.setActiveTab(tab);
     if (activeTab !== tab) setActiveTab(tab);
   };
-
+  const size = useWindowSize();
+  //console.log(`   ${size.width}px / ${size.height}px`);
   return (
     <div>
       <Nav tabs>
@@ -54,21 +56,23 @@ export default (): ReactElement => {
             Smart Farm
           </NavLink>
         </NavItem>
-        <NavItem>
-          <NavLink
-            className={classnames({ active: activeTab === '3' })}
-            onClick={() => {
-              toggle('3');
-            }}
-          >
-            <FontAwesomeIcon
-              icon={faChartBar}
-              size='lg'
-              style={{ marginRight: 5 }}
-            />
-            Report
-          </NavLink>
-        </NavItem>
+        {size.width > 410 && (
+          <NavItem>
+            <NavLink
+              className={classnames({ active: activeTab === '3' })}
+              onClick={() => {
+                toggle('3');
+              }}
+            >
+              <FontAwesomeIcon
+                icon={faChartBar}
+                size='lg'
+                style={{ marginRight: 5 }}
+              />
+              Report
+            </NavLink>
+          </NavItem>
+        )}
       </Nav>
       <TabContent activeTab={activeTab}>
         <TabPane key='1' tabId='1'>
@@ -77,9 +81,11 @@ export default (): ReactElement => {
         <TabPane key='2' tabId='2'>
           <SoiMoisture deviceName='ESP8266' />
         </TabPane>
-        <TabPane key='3' tabId='3'>
-          <Reports />
-        </TabPane>
+        {size.width > 410 && (
+          <TabPane key='3' tabId='3'>
+            <Reports />
+          </TabPane>
+        )}
       </TabContent>
     </div>
   );

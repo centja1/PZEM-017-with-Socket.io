@@ -1,6 +1,5 @@
 import React, { ReactElement, useState, useEffect } from 'react';
-import { Container, Row, Col, Button } from 'reactstrap';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Container, Row, Col } from 'reactstrap';
 import {
   faCheckCircle,
   faSyncAlt,
@@ -27,6 +26,7 @@ import { LogData } from '../../typings/logData';
 import { powerData } from '../../typings/powerData';
 import { isMobile } from 'react-device-detect';
 import CustomButton from './CustomButton';
+
 interface SolarPowerProps {
   deviceName: string;
 }
@@ -57,7 +57,7 @@ export default (props: SolarPowerProps): ReactElement => {
 
   const [deviceData, setDeviceData] = useState<powerData>();
   const [logs, setLogs] = useState<any>([]);
-  const [deviceIpAddress, setDeviceIpAddress] = useState('');
+  const [deviceIpAddress, setDeviceIpAddress] = useState('127.0.0.1');
   const [inverterSwitch, setInverterSwitch] = useState(false);
   const [coolingFans, setCoolingFans] = useState(false);
   const [lightSwitch, setLightSwitch] = useState(false);
@@ -235,6 +235,7 @@ export default (props: SolarPowerProps): ReactElement => {
           }}
         >
           <br />
+
           <div>
             <CustomButton
               title='Inverter TBE'
@@ -293,23 +294,22 @@ export default (props: SolarPowerProps): ReactElement => {
             inverterVoltageShutdown={inverterVoltageShutdown}
           />
           <div>
-            <Button
+            <CustomButton
+              title='Check'
+              isBlik={false}
               onClick={() => broadcastData(RelaySwitch.CHECKING, '')}
+              icon={faCheckCircle}
               color='secondary'
-              style={{ margin: 5, width: 210, height: 50 }}
-            >
-              Check <FontAwesomeIcon icon={faCheckCircle} size='lg' />
-            </Button>
+            />
           </div>
-
-          <div>
-            <Button
+          <div style={{ marginBottom: 25 }}>
+            <CustomButton
+              title='Energy Reset'
+              isBlik={false}
               onClick={() => broadcastData(RelaySwitch.RESET_ENERGY, '')}
+              icon={faSyncAlt}
               color='danger'
-              style={{ margin: 5, width: 210, height: 50 }}
-            >
-              Energy Reset <FontAwesomeIcon icon={faSyncAlt} size='lg' />
-            </Button>
+            />
           </div>
         </Col>
         <Col sm='9'>
