@@ -237,7 +237,7 @@ export default (props: SolarPowerProps): ReactElement => {
           <br />
           <div>
             <CustomButton
-              title='Inverter'
+              title='Inverter TBE'
               disabled={disableBtnInverterSw}
               onClick={() => handleSwitch(1)}
               flagStatus={inverterSwitch}
@@ -267,7 +267,7 @@ export default (props: SolarPowerProps): ReactElement => {
           </div>
           <div>
             <CustomButton
-              title='Spotlight'
+              title='Spotlight (Front)'
               disabled={disableBtnSpotlightSw}
               onClick={() => handleSwitch(4)}
               flagStatus={spotLight}
