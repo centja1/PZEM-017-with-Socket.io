@@ -18,7 +18,6 @@ import Gauge from '../meters/Gauge';
 import moment from 'moment';
 import { subscribeData, unsubscribe, broadcastData } from '../socketio/client';
 import './monitering.css';
-import Blik from '../common/Blik';
 import CircularChart from './CircularChart';
 import { ReduceMessage, ReduceData } from '../../utils/ReduceMessage';
 import { RangePercentage, RangNumber } from '../../utils/RangePercentage';
@@ -27,7 +26,7 @@ import { ChartModel, ChartSeries } from '../../typings/chartModel';
 import { LogData } from '../../typings/logData';
 import { powerData } from '../../typings/powerData';
 import { isMobile } from 'react-device-detect';
-
+import CustomButton from './CustomButton';
 interface SolarPowerProps {
   deviceName: string;
 }
@@ -236,54 +235,45 @@ export default (props: SolarPowerProps): ReactElement => {
           }}
         >
           <br />
-
           <div>
-            {/* {inverterSwitch ? "ON " : "OFF "}{" "} */}
-            <Button
+            <CustomButton
+              title='Inverter'
               disabled={disableBtnInverterSw}
               onClick={() => handleSwitch(1)}
+              flagStatus={inverterSwitch}
+              icon={faPlug}
               color='primary'
-              style={{ margin: 5, width: 210, height: 50 }}
-            >
-              Inverter <FontAwesomeIcon icon={faPlug} size='lg' />
-              {Blik(inverterSwitch)}
-            </Button>
+            />
           </div>
           <div>
-            {/* {coolingFans ? "ON " : "OFF "}{" "} */}
-            <Button
+            <CustomButton
+              title='Cooling Fans'
               disabled={disableBtnCoolingFansSw}
               onClick={() => handleSwitch(2)}
+              flagStatus={coolingFans}
+              icon={faFan}
               color='warning'
-              style={{ margin: 5, width: 210, height: 50 }}
-            >
-              Cooling Fans <FontAwesomeIcon icon={faFan} size='lg' />
-              {Blik(coolingFans)}
-            </Button>
+            />
           </div>
           <div>
-            {/* {lightSwitch ? "ON " : "OFF "}{" "} */}
-            <Button
+            <CustomButton
+              title='LED Light'
               disabled={disableBtnLightSw}
               onClick={() => handleSwitch(3)}
+              flagStatus={lightSwitch}
+              icon={faLightbulb}
               color='info'
-              style={{ margin: 5, width: 210, height: 50 }}
-            >
-              LED Light <FontAwesomeIcon icon={faLightbulb} size='lg' />
-              {Blik(lightSwitch)}
-            </Button>
+            />
           </div>
           <div>
-            {/* {spotLight ? "ON " : "OFF "} */}
-            <Button
+            <CustomButton
+              title='Spotlight'
               disabled={disableBtnSpotlightSw}
               onClick={() => handleSwitch(4)}
+              flagStatus={spotLight}
+              icon={faBolt}
               color='success'
-              style={{ margin: 5, width: 210, height: 50 }}
-            >
-              Spotlight <FontAwesomeIcon icon={faBolt} size='lg' />
-              {Blik(spotLight)}
-            </Button>
+            />
           </div>
           <br />
           <div style={{ color: 'white' }}>

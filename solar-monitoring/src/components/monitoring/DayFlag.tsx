@@ -27,13 +27,21 @@ const DayFlag = (props: DayFlagProps) => {
 
   return (
     <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-      <div style={{ width: '23%', float: 'left', display: 'inline' }}>
-        {isDay() ? (
-          <img alt='icon' src={Sunny} />
-        ) : (
-          <img alt='icon' src={Cloudy} />
-        )}
+      <div
+        style={{
+          display: 'inline',
+          float: 'left',
+          marginLeft: 30,
+          marginTop: -10,
+        }}
+      >
+        <img
+          alt='icon'
+          src={isDay() ? Sunny : Cloudy}
+          style={{ height: 76.7, width: 67.7 }}
+        />
       </div>
+
       <div
         style={{
           float: 'left',
@@ -41,6 +49,7 @@ const DayFlag = (props: DayFlagProps) => {
           textAlign: 'left',
           fontWeight: 'bold',
           fontSize: 'smaller',
+          marginLeft: 3,
         }}
       >
         <span>

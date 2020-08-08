@@ -17,7 +17,6 @@ import Gauge from '../meters/Gauge';
 import moment from 'moment';
 import { subscribeData, unsubscribe, broadcastData } from '../socketio/client';
 import './monitering.css';
-import Blik from '../common/Blik';
 import DayFlag from './DayFlag';
 import { ReduceMessage, ReduceData } from '../../utils/ReduceMessage';
 import { AppConfig, RelaySwitch } from '../../constants/Constants';
@@ -26,6 +25,7 @@ import { LogData } from '../../typings/logData';
 import FormInput from './FormInput';
 import Schedule from './Schedule';
 import { isMobile } from 'react-device-detect';
+import CustomButton from './CustomButton';
 
 interface SoiMoistureProps {
   deviceName: string;
@@ -251,55 +251,47 @@ const SoiMoisture = (props: SoiMoistureProps) => {
           <br />
 
           <div>
-            {/* {waterThePlantsSwitch ? "ON " : "OFF "}{" "} */}
-            <Button
+            <CustomButton
+              title='Waterfall Pump'
               disabled={disableBtnWaterFallPumpSw}
               onClick={() => handleSwitch(1)}
+              flagStatus={waterFallPumpSwitch}
+              icon={faWater}
               color='info'
-              style={{ margin: 5, width: 210, height: 50 }}
-            >
-              Waterfall Pump <FontAwesomeIcon icon={faWater} size='lg' />
-              {Blik(waterFallPumpSwitch)}
-            </Button>
+            />
           </div>
 
           <div>
-            {/* {waterThePlantsSwitch ? "ON " : "OFF "}{" "} */}
-            <Button
+            <CustomButton
+              title='Water the plants'
               disabled={disableBtnWaterThePlantsSw}
               onClick={() => handleSwitch(2)}
+              flagStatus={waterThePlantsSwitch}
+              icon={faCannabis}
               color='warning'
-              style={{ margin: 5, width: 210, height: 50 }}
-            >
-              Water the plants <FontAwesomeIcon icon={faCannabis} size='lg' />
-              {Blik(waterThePlantsSwitch)}
-            </Button>
+            />
           </div>
 
           <div>
-            {/* {waterSprinkler ? "ON " : "OFF "} */}
-            <Button
+            <CustomButton
+              title='Water Sprinkler'
               disabled={disableBtnWaterSprinklerSw}
               onClick={() => handleSwitch(3)}
+              flagStatus={waterSprinkler}
+              icon={faFaucet}
               color='success'
-              style={{ margin: 5, width: 210, height: 50 }}
-            >
-              Water Sprinkler <FontAwesomeIcon icon={faFaucet} size='lg' />
-              {Blik(waterSprinkler)}
-            </Button>
+            />
           </div>
 
           <div>
-            {/* {waterSprinkler ? "ON " : "OFF "} */}
-            <Button
+            <CustomButton
+              title='Garden Light'
               disabled={disableBtnGardenLightSw}
               onClick={() => handleSwitch(4)}
+              flagStatus={gardenLight}
+              icon={faLightbulb}
               color='info'
-              style={{ margin: 5, width: 210, height: 50 }}
-            >
-              Garden Light <FontAwesomeIcon icon={faLightbulb} size='lg' />
-              {Blik(gardenLight)}
-            </Button>
+            />
           </div>
 
           <br />
