@@ -20,17 +20,14 @@ import './monitering.css';
 import CircularChart from './CircularChart';
 import { ReduceMessage, ReduceData } from '../../utils/ReduceMessage';
 import { RangePercentage, RangNumber } from '../../utils/RangePercentage';
-import { AppConfig, RelaySwitch } from '../../constants/Constants';
+import { AppConfig, RelaySwitch, Device } from '../../constants/Constants';
 import { ChartModel, ChartSeries } from '../../typings/chartModel';
 import { LogData } from '../../typings/logData';
 import { powerData } from '../../typings/powerData';
 import { isMobile } from 'react-device-detect';
 import CustomButton from './CustomButton';
 
-interface SolarPowerProps {
-  deviceName: string;
-}
-export default (props: SolarPowerProps): ReactElement => {
+export default (): ReactElement => {
   const [voltageGauge, setVoltageGauge] = useState<number>(0);
   const [currentGauge, setCurrentGauge] = useState<number>(0);
   const [powerGauge, setPowerGauge] = useState<number>(0);
@@ -79,7 +76,7 @@ export default (props: SolarPowerProps): ReactElement => {
   useEffect(() => {
     const cb = (data: any) => {
       //console.log('[data]:', data);
-      if (data.sensor && data.deviceName === props.deviceName) {
+      if (data.sensor && data.deviceName === Device.SOLAR_BOX) {
         dataLogs.unshift({
           logLevelType: 'info',
           timestamp: moment.utc().local(),
@@ -106,7 +103,7 @@ export default (props: SolarPowerProps): ReactElement => {
         setLogs([...dataLogs]);
       }
 
-      if (data.deviceState && data.deviceName === props.deviceName) {
+      if (data.deviceState && data.deviceName === Device.SOLAR_BOX) {
         const {
           IP_ADDRESS,
           INVERTER,

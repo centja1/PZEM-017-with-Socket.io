@@ -76,10 +76,10 @@ export default (): ReactElement => {
       </Nav>
       <TabContent activeTab={activeTab}>
         <TabPane key='1' tabId='1'>
-          <SolarPower deviceName='ESP32' />
+          <SolarPower />
         </TabPane>
         <TabPane key='2' tabId='2'>
-          <SoiMoisture deviceName='ESP8266' />
+          <SoiMoisture />
         </TabPane>
         {size.width > 410 && (
           <TabPane key='3' tabId='3'>

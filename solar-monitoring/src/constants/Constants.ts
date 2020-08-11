@@ -16,8 +16,14 @@ const RelaySwitch = {
   RESET_ENERGY: 'ENERGY_RESET',
 };
 
+const Device = {
+  SOLAR_BOX: 'ESP32',
+  FARM_BOT: 'ESP8266',
+  WATER_PLANTS: 'ESP01',
+};
+
 const LocalStorageConfig = {
   defaultActiveTab: 'defaultActiveTab',
 };
 
-export { AppConfig, RelaySwitch, LocalStorageConfig };
+export { AppConfig, RelaySwitch, LocalStorageConfig, Device };

@@ -18,7 +18,7 @@ import { subscribeData, unsubscribe, broadcastData } from '../socketio/client';
 import './monitering.css';
 import DayFlag from './DayFlag';
 import { ReduceMessage, ReduceData } from '../../utils/ReduceMessage';
-import { AppConfig, RelaySwitch } from '../../constants/Constants';
+import { AppConfig, RelaySwitch, Device } from '../../constants/Constants';
 import { ChartModel } from '../../typings/chartModel';
 import { LogData } from '../../typings/logData';
 import FormInput from './FormInput';
@@ -27,10 +27,7 @@ import { isMobile } from 'react-device-detect';
 import CustomButton from './CustomButton';
 import useWindowSize from '../hooks/useWindowSize';
 
-interface SoiMoistureProps {
-  deviceName: string;
-}
-const SoiMoisture = (props: SoiMoistureProps) => {
+const SoiMoisture = () => {
   const [soilMoisture, setSoilMoisture] = useState<number>(0);
   const [voltageGauge, setVoltageGauge] = useState<number>(0);
   const [currentGauge, setCurrentGauge] = useState<number>(0);
@@ -77,50 +74,49 @@ const SoiMoisture = (props: SoiMoistureProps) => {
   let dataLogs: LogData[] = [];
   useEffect(() => {
     const cb = (data: any) => {
-      // console.log('[data]:', data);
-      if (data.sensor && data.deviceName === props.deviceName) {
-        const { soilMoistureRaw } = data.sensor;
-        setDeviceIpAddress(data.ipAddress);
-
+      if (
+        data.sensor &&
+        (data.deviceName === Device.FARM_BOT ||
+          data.deviceName === Device.WATER_PLANTS)
+      ) {
         dataLogs.unshift({
           logLevelType: 'info',
           timestamp: moment.utc().local(),
           messages: JSON.stringify(data),
         } as LogData);
 
-        setSoilMoisture(soilMoistureRaw);
-        setDeviceData({
-          soilMoistureRaw: soilMoistureRaw,
-        });
+        if (data.deviceName === Device.FARM_BOT) {
+          const { soilMoistureRaw } = data.sensor;
+          setDeviceIpAddress(data.ipAddress);
+          setSoilMoisture(soilMoistureRaw);
+          setDeviceData({
+            soilMoistureRaw: soilMoistureRaw,
+          });
+        }
 
         ReduceMessage(100, dataLogs);
         setLogs([...dataLogs]);
-      } else if (data.sensor && data.deviceName === 'ESP32') {
+      } else if (data.sensor && data.deviceName === Device.SOLAR_BOX) {
         setTemperature(data.sensor.temperature);
         setHumidity(data.sensor.humidity);
         setVoltageGauge(data.sensor.voltage_usage);
         setCurrentGauge(data.sensor.current_usage);
       }
 
-      if (data.deviceState && data.deviceName === props.deviceName) {
-        const {
-          WATER_FALL_PUMP,
-          WATER_THE_PLANTS,
-          WATER_SPRINKLER,
-          GARDEN_LIGHT,
-        } = data.deviceState;
-
-        //setDeviceIpAddress(ipAddress);
-        setWaterFallPumpSwitch(WATER_FALL_PUMP === 'ON');
+      if (data.deviceState && data.deviceName === Device.FARM_BOT) {
+        const { WATER_THE_PLANTS, WATER_SPRINKLER } = data.deviceState;
         setWaterThePlantsSwitch(WATER_THE_PLANTS === 'ON');
         setWaterSprinkler(WATER_SPRINKLER === 'ON');
-        setGardenLight(GARDEN_LIGHT === 'ON');
 
         setDisableBtnWaterThePlansSw(false);
         setDisableBtnWaterSprinklerSw(false);
-        setDisableBtnGardenLightSw(false);
+      } else if (data.deviceState && data.deviceName === Device.WATER_PLANTS) {
+        const { WATER_FALL_PUMP, GARDEN_LIGHT } = data.deviceState;
+        setWaterFallPumpSwitch(WATER_FALL_PUMP === 'ON');
+        setGardenLight(GARDEN_LIGHT === 'ON');
 
-        //console.log(data.deviceState);
+        setDisableBtnWaterFallPumpSw(false);
+        setDisableBtnGardenLightSw(false);
       }
     };
     subscribeData(cb);
