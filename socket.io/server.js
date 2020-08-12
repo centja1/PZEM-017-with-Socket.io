@@ -1,9 +1,20 @@
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+const bodyParser = require('body-parser');
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
+});
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+app.post('/webhook', (req, res) => {
+  console.log('Got body:', req.body);
+  if (io) io.emit('ESP', req.body);
+
+  res.sendStatus(200);
 });
 
 io.on('connection', (socket) => {
