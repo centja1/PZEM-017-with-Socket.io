@@ -191,27 +191,27 @@ export default (): ReactElement => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deviceData]);
 
-  const handleSwitch = (sw: number) => {
+  const handleSwitch = (sw: string) => {
     switch (sw) {
-      case 1:
+      case RelaySwitch.INVERTER:
         broadcastData(RelaySwitch.INVERTER, {
           state: !inverterSwitch ? 'state:on' : 'state:off',
         });
         setDisableBtnInverterSw(true);
         break;
-      case 2:
+      case RelaySwitch.COOLING_FAN:
         broadcastData(RelaySwitch.COOLING_FAN, {
           state: !coolingFans ? 'state:on' : 'state:off',
         });
         setDisableBtnCoolingFansSw(true);
         break;
-      case 3:
+      case RelaySwitch.LIGHT:
         broadcastData(RelaySwitch.LIGHT, {
           state: !lightSwitch ? 'state:on' : 'state:off',
         });
         setDisableBtnLightSw(true);
         break;
-      case 4:
+      case RelaySwitch.SPOTLIGHT:
         broadcastData(RelaySwitch.SPOTLIGHT, {
           state: !spotLight ? 'state:on' : 'state:off',
         });
@@ -235,9 +235,9 @@ export default (): ReactElement => {
 
           <div>
             <CustomButton
-              title='Inverter TBE'
+              title='Inverter 4Kw'
               disabled={disableBtnInverterSw}
-              onClick={() => handleSwitch(1)}
+              onClick={() => handleSwitch(RelaySwitch.INVERTER)}
               flagStatus={inverterSwitch}
               icon={faPlug}
               color='primary'
@@ -247,7 +247,7 @@ export default (): ReactElement => {
             <CustomButton
               title='Cooling Fans'
               disabled={disableBtnCoolingFansSw}
-              onClick={() => handleSwitch(2)}
+              onClick={() => handleSwitch(RelaySwitch.COOLING_FAN)}
               flagStatus={coolingFans}
               icon={faFan}
               color='warning'
@@ -257,7 +257,7 @@ export default (): ReactElement => {
             <CustomButton
               title='LED Light'
               disabled={disableBtnLightSw}
-              onClick={() => handleSwitch(3)}
+              onClick={() => handleSwitch(RelaySwitch.LIGHT)}
               flagStatus={lightSwitch}
               icon={faLightbulb}
               color='info'
@@ -267,7 +267,7 @@ export default (): ReactElement => {
             <CustomButton
               title='Spotlight (Front)'
               disabled={disableBtnSpotlightSw}
-              onClick={() => handleSwitch(4)}
+              onClick={() => handleSwitch(RelaySwitch.SPOTLIGHT)}
               flagStatus={spotLight}
               icon={faBolt}
               color='success'

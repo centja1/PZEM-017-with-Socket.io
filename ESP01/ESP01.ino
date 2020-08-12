@@ -30,7 +30,7 @@ char ntp_server3[20] = "time.uni.net.th";
 int dst = 0;
 
 bool isDebugMode = true;
-bool enableLineNotify = false;
+bool enableLineNotify = true;
 bool enableSocketIO = true;
 
 SocketIoClient webSocket;
@@ -93,7 +93,7 @@ bool worker(void *) {
 
   JsonObject& deviceState = root.createNestedObject("deviceState");
   deviceState["GARDEN_LIGHT"] = GRADEN_LIGHT_VAL ? "ON" : "OFF";
-  deviceState["WATER_FALL_PUMP"] = WALTERFALL_PUMP_VAL ? "ON" : "OFF";
+  deviceState["LIVINGROOM_LIGHT"] = WALTERFALL_PUMP_VAL ? "ON" : "OFF";
 
 
   String output;
@@ -119,8 +119,8 @@ void event(const char * payload, size_t length) {
     bool isAuto = root["payload"]["isAuto"];
 
     String actionName = "";
-    if (action == "WATER_FALL_PUMP") {
-      actionName = "Water fall pump";
+    if (action == "LIVINGROOM_LIGHT") {
+      actionName = "Living Room Light";
       if (state == "state:on") {
         Serial.write(relON, sizeof(relON));
         WALTERFALL_PUMP_VAL = true;

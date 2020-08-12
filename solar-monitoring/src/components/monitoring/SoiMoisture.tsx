@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Container, Row, Col } from 'reactstrap';
 import {
   faWater,
-  faCheckCircle,
   faSyncAlt,
   faCannabis,
   faLightbulb,
@@ -52,10 +51,11 @@ const SoiMoisture = () => {
   const [deviceData, setDeviceData] = useState<any>([]);
   const [logs, setLogs] = useState<any>([]);
   const [deviceIpAddress, setDeviceIpAddress] = useState('');
-  const [waterFallPumpSwitch, setWaterFallPumpSwitch] = useState(false);
-  const [waterThePlantsSwitch, setWaterThePlantsSwitch] = useState(false);
+  const [waterFallPump, setWaterFallPump] = useState(false);
+  const [waterThePlants, setWaterThePlants] = useState(false);
   const [waterSprinkler, setWaterSprinkler] = useState(false);
   const [gardenLight, setGardenLight] = useState(false);
+  const [livingRoomLight, setLivingRoomLight] = useState(false);
 
   const [disableBtnWaterFallPumpSw, setDisableBtnWaterFallPumpSw] = useState(
     false
@@ -67,6 +67,10 @@ const SoiMoisture = () => {
     false
   );
   const [disableBtnGardenLightSw, setDisableBtnGardenLightSw] = useState(false);
+  const [
+    disableBtnLivingRoomLightSw,
+    setDisableBtnLivingRoomLightSw,
+  ] = useState(false);
 
   const [temperature, setTemperature] = useState<number>(0);
   const [humidity, setHumidity] = useState<number>(0);
@@ -77,7 +81,7 @@ const SoiMoisture = () => {
       if (
         data.sensor &&
         (data.deviceName === Device.FARM_BOT ||
-          data.deviceName === Device.WATER_PLANTS)
+          data.deviceName === Device.HOME_CONTROL)
       ) {
         dataLogs.unshift({
           logLevelType: 'info',
@@ -105,17 +109,23 @@ const SoiMoisture = () => {
 
       if (data.deviceState && data.deviceName === Device.FARM_BOT) {
         const { WATER_THE_PLANTS, WATER_SPRINKLER } = data.deviceState;
-        setWaterThePlantsSwitch(WATER_THE_PLANTS === 'ON');
+        setWaterThePlants(WATER_THE_PLANTS === 'ON');
         setWaterSprinkler(WATER_SPRINKLER === 'ON');
 
         setDisableBtnWaterThePlansSw(false);
         setDisableBtnWaterSprinklerSw(false);
-      } else if (data.deviceState && data.deviceName === Device.WATER_PLANTS) {
-        const { WATER_FALL_PUMP, GARDEN_LIGHT } = data.deviceState;
-        setWaterFallPumpSwitch(WATER_FALL_PUMP === 'ON');
+      } else if (data.deviceState && data.deviceName === Device.HOME_CONTROL) {
+        const {
+          LIVINGROOM_LIGHT,
+          GARDEN_LIGHT,
+          WATER_FALL_PUMP,
+        } = data.deviceState;
+        setLivingRoomLight(LIVINGROOM_LIGHT === 'ON');
         setGardenLight(GARDEN_LIGHT === 'ON');
+        setWaterFallPump(WATER_FALL_PUMP === 'ON');
 
         setDisableBtnWaterFallPumpSw(false);
+        setDisableBtnLivingRoomLightSw(false);
         setDisableBtnGardenLightSw(false);
       }
     };
@@ -171,33 +181,39 @@ const SoiMoisture = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deviceData, temperature, humidity]);
 
-  const handleSwitch = (sw: number) => {
+  const handleSwitch = (sw: string) => {
     switch (sw) {
-      case 1:
+      case RelaySwitch.LIVINGROOM_LIGHT:
+        broadcastData(RelaySwitch.LIVINGROOM_LIGHT, {
+          state: !livingRoomLight ? 'state:on' : 'state:off',
+        });
+        setDisableBtnLivingRoomLightSw(true);
+        break;
+      case RelaySwitch.GARDEN_LIGHT:
+        broadcastData(RelaySwitch.GARDEN_LIGHT, {
+          state: !gardenLight ? 'state:on' : 'state:off',
+        });
+        setDisableBtnGardenLightSw(true);
+        break;
+      case RelaySwitch.WATER_FALL_PUMP:
         broadcastData(RelaySwitch.WATER_FALL_PUMP, {
-          state: !waterFallPumpSwitch ? 'state:on' : 'state:off',
+          state: !waterFallPump ? 'state:on' : 'state:off',
         });
         setDisableBtnWaterFallPumpSw(true);
         break;
-      case 2:
+      case RelaySwitch.WATER_THE_PLANTS:
         broadcastData(RelaySwitch.WATER_THE_PLANTS, {
-          state: !waterThePlantsSwitch ? 'state:on' : 'state:off',
+          state: !waterThePlants ? 'state:on' : 'state:off',
           delay: Number(formRef.current.value),
         });
         setDisableBtnWaterThePlansSw(true);
         break;
-      case 3:
+      case RelaySwitch.WATER_SPRINKLER:
         broadcastData(RelaySwitch.WATER_SPRINKLER, {
           state: !waterSprinkler ? 'state:on' : 'state:off',
           delay: Number(formRef.current.value),
         });
         setDisableBtnWaterSprinklerSw(true);
-        break;
-      case 4:
-        broadcastData(RelaySwitch.GARDEN_LIGHT, {
-          state: !gardenLight ? 'state:on' : 'state:off',
-        });
-        setDisableBtnGardenLightSw(true);
         break;
 
       default:
@@ -249,10 +265,32 @@ const SoiMoisture = () => {
 
           <div>
             <CustomButton
+              title='Living Room LI'
+              disabled={disableBtnLivingRoomLightSw}
+              onClick={() => handleSwitch(RelaySwitch.LIVINGROOM_LIGHT)}
+              flagStatus={livingRoomLight}
+              icon={faLightbulb}
+              color='warning'
+            />
+          </div>
+
+          <div>
+            <CustomButton
+              title='Garden Light'
+              disabled={disableBtnGardenLightSw}
+              onClick={() => handleSwitch(RelaySwitch.GARDEN_LIGHT)}
+              flagStatus={gardenLight}
+              icon={faLightbulb}
+              color='success'
+            />
+          </div>
+
+          <div>
+            <CustomButton
               title='Waterfall Pump'
               disabled={disableBtnWaterFallPumpSw}
-              onClick={() => handleSwitch(1)}
-              flagStatus={waterFallPumpSwitch}
+              onClick={() => handleSwitch(RelaySwitch.WATER_FALL_PUMP)}
+              flagStatus={waterFallPump}
               icon={faWater}
               color='info'
             />
@@ -262,10 +300,10 @@ const SoiMoisture = () => {
             <CustomButton
               title='Water the plants'
               disabled={disableBtnWaterThePlantsSw}
-              onClick={() => handleSwitch(2)}
-              flagStatus={waterThePlantsSwitch}
+              onClick={() => handleSwitch(RelaySwitch.WATER_THE_PLANTS)}
+              flagStatus={waterThePlants}
               icon={faCannabis}
-              color='warning'
+              color='primary'
             />
           </div>
 
@@ -273,21 +311,10 @@ const SoiMoisture = () => {
             <CustomButton
               title='Water Sprinkler'
               disabled={disableBtnWaterSprinklerSw}
-              onClick={() => handleSwitch(3)}
+              onClick={() => handleSwitch(RelaySwitch.WATER_SPRINKLER)}
               flagStatus={waterSprinkler}
               icon={faFaucet}
               color='success'
-            />
-          </div>
-
-          <div>
-            <CustomButton
-              title='Garden Light'
-              disabled={disableBtnGardenLightSw}
-              onClick={() => handleSwitch(4)}
-              flagStatus={gardenLight}
-              icon={faLightbulb}
-              color='info'
             />
           </div>
 
@@ -350,15 +377,6 @@ const SoiMoisture = () => {
             >
               <strong>Device IP: {deviceIpAddress}</strong>
             </div>
-          </div>
-          <div>
-            <CustomButton
-              title='Check'
-              isBlik={false}
-              onClick={() => broadcastData(RelaySwitch.CHECKING, '')}
-              icon={faCheckCircle}
-              color='secondary'
-            />
           </div>
 
           <div style={{ marginBottom: 37 }}>
