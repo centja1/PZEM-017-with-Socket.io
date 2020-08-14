@@ -1,19 +1,22 @@
-var app = require('express')();
+const express = require('express');
+const app = express();
+
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 const bodyParser = require('body-parser');
 
-app.get('/', (req, res) => {
+const PORT = 4000; // default port to listen
+
+app.get('/', async (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-app.post('/webhook', (req, res) => {
+app.post('/webhook', async (req, res) => {
   console.log('Got body:', req.body);
   if (io) io.emit('ESP', req.body);
-
   res.sendStatus(200);
 });
 
@@ -38,6 +41,6 @@ io.on('connection', (socket) => {
   });
 });
 
-http.listen(4000, () => {
-  console.log('Server start on http://127.0.0.1:4000');
+http.listen(PORT, () => {
+  console.log(`Server start on http://127.0.0.1:${PORT}`);
 });
