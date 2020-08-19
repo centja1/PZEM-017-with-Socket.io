@@ -119,8 +119,8 @@ static uint8_t pzemSlaveAddr = 0x01; // PZEM default address
 PZEM017 pzem(&Serial2, pzemSlaveAddr, 9600);
 DHTesp dht;
 
-auto timer = timer_create_default(); // create a timer with default settings
-Timer<> default_timer; // save as above
+TaskHandle_t mainTask = NULL;
+const TickType_t xDelay = pdMS_TO_TICKS(1000);
 
 void setup() {
   // OLED Display
@@ -144,7 +144,17 @@ void setup() {
   webSocket.begin(SOCKETIO_HOST, SOCKETIO_PORT);
   webSocket.on("ESP", event);
 
-  timer.every(2000, readPzemSensor);
+  xTaskCreatePinnedToCore(
+    readPzemSensor,               /* Task function. */
+    "readPzemSensor",             /* String with name of task. */
+    10000,                        /* Stack size in words. */
+    NULL,                         /* Parameter passed as input of the task */
+    1,                            /* Priority of the task. */
+    &mainTask,                    /* Task handle. */
+    0);                           /* Cpu core */
+
+  Serial.print("Setup: created Task priority = ");
+  Serial.println(uxTaskPriorityGet(mainTask));
 }
 
 bool inverterStarted = false;
@@ -154,114 +164,118 @@ float energy_kWhtoday = 0;
 float energy_start = 0;
 
 void loop() {
-  unsigned long currentMillis = millis();
-
-  //Shutdown Inverter on 15:00
-  time_t now = time(nullptr);
-  struct tm* p_tm = localtime(&now);
-  if (p_tm->tm_hour == 15 && p_tm->tm_min == 30 && p_tm->tm_sec == 0) {
-    if (currentMillis - time_1 >= INTERVAL_MESSAGE1) {
-      time_1 = currentMillis;
-      actionCommand("INVERTER", "state:off", "Invert หยุดทำงาน ที่เวลา 15:00", true, true);
-    }
-  }
-
-  //Shutdown Inverter on 16:30
-  if (p_tm->tm_hour == 16 && p_tm->tm_min == 30 && p_tm->tm_sec == 0) {
-    if (currentMillis - time_1 >= INTERVAL_MESSAGE1) {
-      time_1 = currentMillis;
-      actionCommand("INVERTER", "state:off", "", true, false);
-      actionCommand("COOLING_FAN", "state:off", " ", true, false);
-    }
-  }
-
-  // Reset FirebaseData per day
-  if (p_tm->tm_hour == 23 && p_tm->tm_min == 59)   {
-    if (Firebase.deleteNode(firebaseData, "/data")) {
-      Serial.print("delete /data failed:");
-      Serial.println("Firebase Error: " + firebaseData.errorReason());
-      // reset energy every day
-      pzem.resetEnergy();
-    }
-  }
-
   webSocket.loop();
-  timer.tick();
 }
 
-bool readPzemSensor(void *) {
-  if (isDebugMode)
-    pzem.getSlaveParameters();
+void readPzemSensor(void *pvParam) {
+  while (1) {
+    unsigned long currentMillis = millis();
 
-  // pzem.getPowerAlarm();
+    if (isDebugMode)
+      pzem.getSlaveParameters();
 
-  // PZEM-017
-  float voltage = !isnan(pzem.voltage()) ? pzem.voltage() : 0;
-  float current = !isnan(pzem.current()) ? pzem.current() : 0;
-  float power = !isnan(pzem.power()) ? pzem.power() * 10 : 0;
-  float energy = !isnan(pzem.energy()) ? pzem.energy() * 10 : 0;
-  uint16_t over_power_alarm = pzem.VoltHighAlarm();
-  uint16_t lower_power_alarm = pzem.VoltLowAlarm();
-  uint16_t powerAlarm = pzem.getPowerAlarm();
-  // DHT11
-  float humidity = !isnan(dht.getHumidity()) ? dht.getHumidity() : 0;
-  float temperature = !isnan(dht.getTemperature()) ? dht.getTemperature() : 0;
+    // pzem.getPowerAlarm();
 
-  if (!energy_start || (energy < energy_start)) {
-    energy_start = energy;  // Init after restart and hanlde roll-over if any
-  }
-  energy_kWhtoday += (energy - energy_start);
-  energy_start = energy;
+    // PZEM-017
+    float voltage = !isnan(pzem.voltage()) ? pzem.voltage() : 0;
+    float current = !isnan(pzem.current()) ? pzem.current() : 0;
+    float power = !isnan(pzem.power()) ? pzem.power() * 10 : 0;
+    float energy = !isnan(pzem.energy()) ? pzem.energy() * 10 : 0;
+    uint16_t over_power_alarm = pzem.VoltHighAlarm();
+    uint16_t lower_power_alarm = pzem.VoltLowAlarm();
+    uint16_t powerAlarm = pzem.getPowerAlarm();
+    // DHT11
+    float humidity = !isnan(dht.getHumidity()) ? dht.getHumidity() : 0;
+    float temperature = !isnan(dht.getTemperature()) ? dht.getTemperature() : 0;
 
-  oled.setTextXY(2, 1);
-  oled.putString("- S1:" + String((digitalRead(INVERTER) == LOW) ? "ON" : "OFF") + " S2:" + String((digitalRead(COOLING_FAN) == LOW) ? "ON" : "OFF") + " S3:" + String((digitalRead(LIGHT) == LOW) ? "ON" : "OFF") + " -");
+    if (!energy_start || (energy < energy_start)) {
+      energy_start = energy;  // Init after restart and hanlde roll-over if any
+    }
+    energy_kWhtoday += (energy - energy_start);
+    energy_start = energy;
 
-  if (voltage > 3 && voltage < 300) {
-    digitalWrite(LED_BUILTIN, HIGH);
-    // Build Messages For Line Notify
-    batteryStatusMessage = "\r\n===============\r\n - Battery Status - \r\n";
-    batteryStatusMessage += "VOLTAGE: " + String(voltage) + "V\r\n";
-    batteryStatusMessage += "CURRENT: " + String(current) + "A\r\n";
-    batteryStatusMessage += "POWER: " + String(power) + "W\r\n";
-    batteryStatusMessage += "ENERGY: " + String(energy_kWhtoday) + "WH";
+    oled.setTextXY(2, 1);
+    oled.putString("- S1:" + String((digitalRead(INVERTER) == LOW) ? "ON" : "OFF") + " S2:" + String((digitalRead(COOLING_FAN) == LOW) ? "ON" : "OFF") + " S3:" + String((digitalRead(LIGHT) == LOW) ? "ON" : "OFF") + " -");
 
+    if (voltage > 3 && voltage < 300) {
+      digitalWrite(LED_BUILTIN, HIGH);
+      // Build Messages For Line Notify
+      batteryStatusMessage = "\r\n===============\r\n - Battery Status - \r\n";
+      batteryStatusMessage += "VOLTAGE: " + String(voltage) + "V\r\n";
+      batteryStatusMessage += "CURRENT: " + String(current) + "A\r\n";
+      batteryStatusMessage += "POWER: " + String(power) + "W\r\n";
+      batteryStatusMessage += "ENERGY: " + String(energy_kWhtoday) + "WH";
+
+      time_t now = time(nullptr);
+      struct tm* p_tm = localtime(&now);
+
+      if ((voltage >= inverterVoltageStart && voltage <= hightVoltage) &&  !inverterStarted && p_tm->tm_hour <= 15) {
+        actionCommand("INVERTER", "state:on", batteryStatusMessage, true, true);
+      }
+
+      if ((voltage < lowVoltage || voltage >= hightVoltage || voltage <= inverterVoltageShutdown) && inverterStarted) {
+        actionCommand("INVERTER", "state:off", batteryStatusMessage, true, true);
+      }
+
+      createResponse(voltage, current, power, energy_kWhtoday, over_power_alarm, lower_power_alarm, humidity, temperature, true);
+    } else {
+      clearDisplay();
+      printMessage(4, 1, "ERROR !!", false);
+      printMessage(5, 1, "Failed to read modbus", true);
+      createResponse(0, 0, 0, 0, 0, 0, humidity, temperature, false);
+    }
+
+    //  Solar Fan Cooling Start
+    if ((int)temperature > 0 && (int)temperature >= 42) {
+      if (!solarboxFanStarted) {
+        Serial.println("Fan Start");
+        actionCommand("COOLING_FAN", "state:on", "Start SolarBox Fan", true, false);
+      }
+    }
+
+    //  Solar Fan Cooling Start
+    if ((int)temperature > 0 && (int)temperature <= 38) {
+      if (solarboxFanStarted) {
+        Serial.println("Fan Stoped");
+        actionCommand("COOLING_FAN", "state:off", "Stoped SolarBox Fan", true, false);
+      }
+    }
+
+    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+
+
+    //Shutdown Inverter on 15:00
     time_t now = time(nullptr);
     struct tm* p_tm = localtime(&now);
-
-    if ((voltage >= inverterVoltageStart && voltage <= hightVoltage) &&  !inverterStarted && p_tm->tm_hour <= 15) {
-      actionCommand("INVERTER", "state:on", batteryStatusMessage, true, true);
+    if (p_tm->tm_hour == 15 && p_tm->tm_min == 30 && p_tm->tm_sec == 0) {
+      if (currentMillis - time_1 >= INTERVAL_MESSAGE1) {
+        time_1 = currentMillis;
+        actionCommand("INVERTER", "state:off", "Invert หยุดทำงาน ที่เวลา 15:00", true, true);
+      }
     }
 
-    if ((voltage < lowVoltage || voltage >= hightVoltage || voltage <= inverterVoltageShutdown) && inverterStarted) {
-      actionCommand("INVERTER", "state:off", batteryStatusMessage, true, true);
+    //Shutdown Inverter on 16:30
+    if (p_tm->tm_hour == 16 && p_tm->tm_min == 30 && p_tm->tm_sec == 0) {
+      if (currentMillis - time_1 >= INTERVAL_MESSAGE1) {
+        time_1 = currentMillis;
+        actionCommand("INVERTER", "state:off", "", true, false);
+        actionCommand("COOLING_FAN", "state:off", " ", true, false);
+      }
     }
 
-    createResponse(voltage, current, power, energy_kWhtoday, over_power_alarm, lower_power_alarm, humidity, temperature, true);
-  } else {
-    clearDisplay();
-    printMessage(4, 1, "ERROR !!", false);
-    printMessage(5, 1, "Failed to read modbus", true);
-    createResponse(0, 0, 0, 0, 0, 0, humidity, temperature, false);
+    // Reset FirebaseData per day
+    if (p_tm->tm_hour == 23 && p_tm->tm_min == 59)   {
+      if (Firebase.deleteNode(firebaseData, "/data")) {
+        Serial.print("delete /data failed:");
+        Serial.println("Firebase Error: " + firebaseData.errorReason());
+        // reset energy every day
+        pzem.resetEnergy();
+      }
+    }
+
+
+    vTaskDelay(xDelay);
   }
-
-  //  Solar Fan Cooling Start
-  if ((int)temperature > 0 && (int)temperature >= 42) {
-    if (!solarboxFanStarted) {
-      Serial.println("Fan Start");
-      actionCommand("COOLING_FAN", "state:on", "Start SolarBox Fan", true, false);
-    }
-  }
-
-  //  Solar Fan Cooling Start
-  if ((int)temperature > 0 && (int)temperature <= 38) {
-    if (solarboxFanStarted) {
-      Serial.println("Fan Stoped");
-      actionCommand("COOLING_FAN", "state:off", "Stoped SolarBox Fan", true, false);
-    }
-  }
-
-  digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-  return true; // repeat? true
 }
 
 void event(const char * payload, size_t length) {
