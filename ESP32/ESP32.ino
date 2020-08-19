@@ -120,7 +120,7 @@ PZEM017 pzem(&Serial2, pzemSlaveAddr, 9600);
 DHTesp dht;
 
 TaskHandle_t mainTask = NULL;
-const TickType_t xDelay = pdMS_TO_TICKS(1000);
+const TickType_t xDelay = pdMS_TO_TICKS(2000);
 
 void setup() {
   // OLED Display
