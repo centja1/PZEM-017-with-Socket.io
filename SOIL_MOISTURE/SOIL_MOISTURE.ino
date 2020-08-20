@@ -59,6 +59,9 @@ Timer<> default_timer; // save as above
 Timer<1, millis> task1;
 Timer<1, millis> task2;
 
+const int AirValue = 1024;
+const int WaterValue = 280;
+
 void setup() {
 
   Serial.begin(115200); //For debug on cosole (PC)
@@ -137,7 +140,7 @@ void loop() {
 
 bool readSoilMoistureSensor(void *) {
   moisVal = analogRead(ANALOG_PIN);
-  soilMoistureReal =  map(moisVal, 1023, 0, 0, 100);
+  soilMoistureReal = map(moisVal, AirValue, WaterValue, 0, 100);
   if (moisVal > 0) {
     createResponse(moisVal);
   }
